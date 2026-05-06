@@ -12,7 +12,7 @@ export default function CreateEventPage() {
   const [form, setForm] = useState({
     script_id: searchParams.get("script_id") ?? "",
     location: "",
-    host_in_game: false,
+    host_in_game: true,
     host_cross_gender: false,
     allow_cross_gender: false,
   });
@@ -160,6 +160,14 @@ export default function CreateEventPage() {
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             wrapperClassName="w-full"
             minDate={new Date()}
+            onCalendarOpen={() => {
+              setTimeout(() => {
+                const list = document.querySelector('.react-datepicker__time-list')
+                const items = list?.querySelectorAll('.react-datepicker__time-list-item')
+                // 08:00 is item index 16 (8h × 2 items/h)
+                items?.[16]?.scrollIntoView({ block: 'start' })
+              }, 0)
+            }}
           />
         </div>
 

@@ -21,7 +21,7 @@ export default function CreateScriptPage() {
     difficulty: 'easy',
     male_slots: 0,
     female_slots: 0,
-    any_slots: 1,
+    any_slots: 0,
   })
   const [genres, setGenres] = useState<number[]>([])
   const [coverImage, setCoverImage] = useState<File | null>(null)
