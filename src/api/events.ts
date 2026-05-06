@@ -38,7 +38,14 @@ export function createEvent(data: {
 
 export function updateEvent(
   id: number,
-  data: Partial<{ scheduled_at: string; location: string; status: string; offline_male: number; offline_female: number }>,
+  data: Partial<{
+    scheduled_at: string;
+    location: string;
+    status: string;
+    offline_male: number;
+    offline_female: number;
+    allow_cross_gender: boolean;
+  }>,
 ) {
   return request<Event>(`/events/${id}`, {
     method: "PATCH",

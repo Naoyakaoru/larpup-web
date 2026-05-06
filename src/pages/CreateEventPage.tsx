@@ -4,9 +4,12 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { getScripts } from "../api/scripts";
 import { createEvent } from "../api/events";
+import { useAuth } from "../contexts/AuthContext";
+import { calcNeeded, canAddOffline, formatNeeded } from "../utils/slotCalc";
 import type { Script } from "../types";
 
 export default function CreateEventPage() {
+  const { user } = useAuth();
   const [scripts, setScripts] = useState<Script[]>([]);
   const [searchParams] = useSearchParams();
   const [form, setForm] = useState({
@@ -122,45 +125,107 @@ export default function CreateEventPage() {
                 主揪也要上車（佔一個名額）
               </span>
             </label>
-            {form.host_in_game && (
-              <label className="flex items-center gap-2 cursor-pointer pl-6">
+            {form.host_in_game &&
+              (selectedScript.male_slots > 0 ||
+                selectedScript.female_slots > 0) && (
+                <label className="flex items-center gap-2 cursor-pointer pl-6">
+                  <input
+                    type="checkbox"
+                    checked={form.host_cross_gender}
+                    onChange={set("host_cross_gender")}
+                    className="w-4 h-4 accent-brand rounded"
+                  />
+                  <span className="text-sm text-gray-500">主揪反串</span>
+                </label>
+              )}
+            {(selectedScript.male_slots > 0 ||
+              selectedScript.female_slots > 0) && (
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={form.host_cross_gender}
-                  onChange={set("host_cross_gender")}
+                  checked={form.allow_cross_gender}
+                  onChange={set("allow_cross_gender")}
                   className="w-4 h-4 accent-brand rounded"
                 />
-                <span className="text-sm text-gray-500">主揪反串</span>
+                <span className="text-sm text-gray-700">開放反串</span>
               </label>
             )}
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.allow_cross_gender}
-                onChange={set("allow_cross_gender")}
-                className="w-4 h-4 accent-brand rounded"
-              />
-              <span className="text-sm text-gray-700">開放反串</span>
-            </label>
             <div className="space-y-1.5">
-              <p className="text-xs text-gray-500 font-medium">線下已確定朋友</p>
-              {([['offline_male', '男'] , ['offline_female', '女']] as const).map(([field, label]) => (
+              <p className="text-xs text-gray-500 font-medium">
+                線下已確定朋友
+              </p>
+              {(
+                [
+                  ["offline_male", "男"],
+                  ["offline_female", "女"],
+                ] as const
+              ).map(([field, label]) => (
                 <div key={field} className="flex items-center justify-between">
                   <span className="text-xs text-gray-500">{label}生</span>
                   <div className="flex items-center gap-2">
-                    <button type="button"
-                      onClick={() => setForm(f => ({ ...f, [field]: Math.max(0, f[field] - 1) }))}
-                      className="w-6 h-6 rounded-full border border-gray-300 text-gray-600 text-sm flex items-center justify-center hover:border-brand hover:text-brand">−</button>
-                    <span className="text-sm font-medium w-4 text-center">{form[field]}</span>
-                    <button type="button"
-                      onClick={() => setForm(f => ({ ...f, [field]: f[field] + 1 }))}
-                      className="w-6 h-6 rounded-full border border-gray-300 text-gray-600 text-sm flex items-center justify-center hover:border-brand hover:text-brand">+</button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm((f) => ({
+                          ...f,
+                          [field]: Math.max(0, f[field] - 1),
+                        }))
+                      }
+                      className="w-6 h-6 rounded-full border border-gray-300 text-gray-600 text-sm flex items-center justify-center hover:border-brand hover:text-brand"
+                    >
+                      −
+                    </button>
+                    <span className="text-sm font-medium w-4 text-center">
+                      {form[field]}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm((f) => {
+                          const remainingAfterHost = calcNeeded(
+                            selectedScript,
+                            {
+                              host_in_game: f.host_in_game,
+                              host_cross_gender: f.host_cross_gender,
+                              offline_male: 0,
+                              offline_female: 0,
+                              hostGender: user?.gender ?? "male",
+                            },
+                          );
+                          const addingGender =
+                            field === "offline_male" ? "male" : "female";
+                          if (
+                            !canAddOffline(
+                              remainingAfterHost,
+                              f.offline_male,
+                              f.offline_female,
+                              addingGender,
+                              f.allow_cross_gender,
+                            )
+                          )
+                            return f;
+                          return { ...f, [field]: f[field] + 1 };
+                        })
+                      }
+                      className="w-6 h-6 rounded-full border border-gray-300 text-gray-600 text-sm flex items-center justify-center hover:border-brand hover:text-brand"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
             <p className="text-xs text-gray-400">
-              實際還需要：{selectedScript.total_slots - (form.host_in_game ? 1 : 0) - form.offline_male - form.offline_female} 人
+              實際還需要：
+              {formatNeeded(
+                calcNeeded(selectedScript, {
+                  host_in_game: form.host_in_game,
+                  host_cross_gender: form.host_cross_gender,
+                  offline_male: form.offline_male,
+                  offline_female: form.offline_female,
+                  hostGender: user?.gender ?? "male",
+                }),
+              )}
             </p>
           </div>
         )}
@@ -182,11 +247,15 @@ export default function CreateEventPage() {
             minDate={new Date()}
             onCalendarOpen={() => {
               setTimeout(() => {
-                const list = document.querySelector('.react-datepicker__time-list')
-                const items = list?.querySelectorAll('.react-datepicker__time-list-item')
+                const list = document.querySelector(
+                  ".react-datepicker__time-list",
+                );
+                const items = list?.querySelectorAll(
+                  ".react-datepicker__time-list-item",
+                );
                 // 08:00 is item index 16 (8h × 2 items/h)
-                items?.[16]?.scrollIntoView({ block: 'start' })
-              }, 0)
+                items?.[16]?.scrollIntoView({ block: "start" });
+              }, 0);
             }}
           />
         </div>

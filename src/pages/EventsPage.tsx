@@ -84,6 +84,11 @@ export default function EventsPage() {
                     {event.script.genres.map(g => (
                       <span key={g} className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">{g}</span>
                     ))}
+                    {event.allow_cross_gender ? (
+                      <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium">開放反串</span>
+                    ) : (event.script.male_slots > 0 || event.script.female_slots > 0) ? (
+                      <span className="text-xs bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-full">不反串</span>
+                    ) : null}
                   </div>
                   <div className="text-sm text-gray-500 space-y-0.5">
                     <div>{formatDate(event.scheduled_at)}</div>
