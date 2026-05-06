@@ -77,6 +77,14 @@ export default function EventsPage() {
                       {STATUS_LABELS[event.status]}
                     </span>
                   </div>
+                  <div className="flex flex-wrap gap-1 mb-1">
+                    <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
+                      {event.script.difficulty_label}
+                    </span>
+                    {event.script.genres.map(g => (
+                      <span key={g} className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">{g}</span>
+                    ))}
+                  </div>
                   <div className="text-sm text-gray-500 space-y-0.5">
                     <div>{formatDate(event.scheduled_at)}</div>
                     <div>{event.location}</div>

@@ -3,7 +3,6 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getScript } from '../api/scripts'
 import type { Script } from '../types'
 
-const DIFFICULTY_LABELS = { easy: '入門', medium: '進階', hard: '燒腦' }
 const DIFFICULTY_COLORS = {
   easy: 'bg-blue-100 text-blue-700',
   medium: 'bg-orange-100 text-orange-700',
@@ -36,7 +35,7 @@ export default function ScriptDetailPage() {
           <div className="flex items-start justify-between gap-3 mb-3">
             <h1 className="text-xl font-bold text-gray-900">{script.title}</h1>
             <span className={`shrink-0 text-xs px-2 py-1 rounded-full font-medium ${DIFFICULTY_COLORS[script.difficulty]}`}>
-              {DIFFICULTY_LABELS[script.difficulty]}
+              {script.difficulty_label}
             </span>
           </div>
 

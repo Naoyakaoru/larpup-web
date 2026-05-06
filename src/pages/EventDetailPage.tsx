@@ -10,11 +10,6 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import type { Event, EventMember } from "../types";
 
-const DIFFICULTY_LABELS: Record<"easy" | "medium" | "hard", string> = {
-  easy: "入門",
-  medium: "進階",
-  hard: "燒腦",
-};
 const DIFFICULTY_COLORS: Record<"easy" | "medium" | "hard", string> = {
   easy: "bg-blue-100 text-blue-700",
   medium: "bg-orange-100 text-orange-700",
@@ -163,7 +158,7 @@ export default function EventDetailPage() {
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLORS[event.script.difficulty]}`}
           >
-            {DIFFICULTY_LABELS[event.script.difficulty]}
+            {event.script.difficulty_label}
           </span>
           {event.script.genres.map((g) => (
             <span

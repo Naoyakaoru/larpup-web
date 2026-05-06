@@ -12,6 +12,7 @@ export interface Script {
   title: string;
   genres: string[];
   difficulty: "easy" | "medium" | "hard";
+  difficulty_label: string;
   male_slots: number;
   female_slots: number;
   any_slots: number;
@@ -30,6 +31,7 @@ export interface Event {
     female_slots: number;
     any_slots: number;
     difficulty: "easy" | "medium" | "hard";
+    difficulty_label: string;
     genres: string[];
   };
   host: { id: number; nickname: string };
