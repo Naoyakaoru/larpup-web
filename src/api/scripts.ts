@@ -16,3 +16,31 @@ export function getScript(id: number) {
 export function createScript(data: FormData) {
   return request<Script>('/scripts', { method: 'POST', body: data })
 }
+
+export function updateScript(id: number, data: FormData) {
+  return request<Script>(`/scripts/${id}`, { method: 'PATCH', body: data })
+}
+
+export interface ScriptVersion {
+  id: number
+  version_name: string | null
+  price: number | null
+  duration: number | null
+  store: { id: number; name: string }
+}
+
+export function getScriptVersions(scriptId: number) {
+  return request<ScriptVersion[]>(`/scripts/${scriptId}/versions`)
+}
+
+export function getAdminScripts() {
+  return request<Script[]>('/admin/scripts')
+}
+
+export function approveScript(id: number) {
+  return request<Script>(`/admin/scripts/${id}/approve`, { method: 'PATCH' })
+}
+
+export function rejectScript(id: number) {
+  return request<Script>(`/admin/scripts/${id}/reject`, { method: 'PATCH' })
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { getScripts } from "../api/scripts";
@@ -12,6 +13,7 @@ export default function CreateEventPage() {
   const { user } = useAuth();
   const [scripts, setScripts] = useState<Script[]>([]);
   const [searchParams] = useSearchParams();
+  const scriptVersionId = searchParams.get("script_version_id") ?? "";
   const [form, setForm] = useState({
     script_id: searchParams.get("script_id") ?? "",
     location: "",
@@ -25,6 +27,10 @@ export default function CreateEventPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation()
+  const versionState = location.state as {
+    store_name: string; version_name: string | null; price: number | null; duration: number | null
+  } | null
 
   useEffect(() => {
     getScripts().then(setScripts);
@@ -54,7 +60,9 @@ export default function CreateEventPage() {
     setLoading(true);
     try {
       const event = await createEvent({
-        script_id: Number(form.script_id),
+        ...(scriptVersionId
+          ? { script_version_id: Number(scriptVersionId) }
+          : { script_id: Number(form.script_id) }),
         scheduled_at: scheduledAt.toISOString(),
         location: form.location,
         host_in_game: form.host_in_game,
@@ -86,7 +94,8 @@ export default function CreateEventPage() {
             value={form.script_id}
             onChange={set("script_id")}
             required
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+            disabled={!!scriptVersionId}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-60 disabled:bg-gray-50"
           >
             <option value="">請選擇劇本</option>
             {scripts.map((s) => (
@@ -95,6 +104,38 @@ export default function CreateEventPage() {
               </option>
             ))}
           </select>
+        </div>
+
+        {/* 版本資訊 */}
+        <div className="bg-gray-50 rounded-md px-4 py-3 text-sm space-y-1">
+          {scriptVersionId && versionState && (
+            <div className="flex justify-between">
+              <span className="text-gray-500">店家</span>
+              <span className="font-medium text-gray-900">{versionState.store_name}</span>
+            </div>
+          )}
+          {scriptVersionId && versionState?.version_name && (
+            <div className="flex justify-between">
+              <span className="text-gray-500">版本</span>
+              <span className="font-medium text-gray-900">{versionState.version_name}</span>
+            </div>
+          )}
+          {scriptVersionId && versionState?.price != null && (
+            <div className="flex justify-between">
+              <span className="text-gray-500">定價</span>
+              <span className="font-medium text-gray-900">NT$ {versionState.price}</span>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <span className="text-gray-500">時長</span>
+            <span className="font-medium text-gray-900">
+              {scriptVersionId && versionState?.duration != null
+                ? `${versionState.duration} 小時`
+                : selectedScript?.duration != null
+                  ? `${selectedScript.duration} 小時`
+                  : "—"}
+            </span>
+          </div>
         </div>
 
         {selectedScript && (

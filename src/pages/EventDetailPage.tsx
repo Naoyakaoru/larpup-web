@@ -222,7 +222,7 @@ export default function EventDetailPage() {
           </span>
         </div>
 
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        <div className="flex flex-wrap gap-1.5 mb-3">
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLORS[event.script.difficulty]}`}
           >
@@ -242,6 +242,18 @@ export default function EventDetailPage() {
             </span>
           )}
         </div>
+
+        {(() => {
+          const parts = [
+            event.script.store?.name,
+            event.script.version_name,
+            event.script.duration != null ? `${event.script.duration}h` : null,
+            event.script.price != null ? `NT$${event.script.price}` : null,
+          ].filter(Boolean)
+          return (
+            <p className="text-xs text-gray-400 mb-4">{parts.join("・")}</p>
+          )
+        })()}
 
         <dl className="space-y-2 text-sm mb-4">
           <div className="flex justify-between">
@@ -495,7 +507,7 @@ export default function EventDetailPage() {
           <div className="bg-surface rounded-lg border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-3">報名名單</h2>
             <div className="space-y-2">
-              {event.members.map((m) => {
+              {event.members.filter(m => m.status !== 'cancelled' && m.status !== 'rejected').map((m) => {
                 const showName =
                   isHost || m.user.id === user?.id || m.status !== "pending";
                 return (
@@ -676,6 +688,58 @@ export default function EventDetailPage() {
                   </div>
                 </div>
               ))}
+              {event.members.filter(m => m.status === 'cancelled' || m.status === 'rejected').map((m) => {
+                const showName =
+                  isHost || m.user.id === user?.id || m.status !== "pending";
+                return (
+                  <div
+                    key={m.id}
+                    className="py-1.5 border-b border-gray-50 last:border-0 opacity-50"
+                  >
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={showName ? "text-gray-700 font-medium" : "text-gray-400 italic"}>
+                          {showName ? m.user.nickname : "匿名"}
+                        </span>
+                        <span className={`text-xs w-5 h-5 rounded-full inline-flex items-center justify-center font-medium ${m.user.gender === "male" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"}`}>
+                          {m.user.gender === "male" ? "♂" : "♀"}
+                        </span>
+                      </div>
+                      <span className="text-gray-400 text-xs">{MEMBER_STATUS_LABELS[m.status]}</span>
+                    </div>
+                    <div className="flex gap-3 mt-0.5 text-xs text-gray-400 flex-wrap">
+                      {((isHost && m.user.id !== event.host.id) ||
+                        (!isHost && m.user.id === user?.id)) && (
+                        <span>
+                          申請{" "}
+                          {new Date(m.applied_at).toLocaleString("zh-TW", {
+                            month: "2-digit", day: "2-digit",
+                            hour: "2-digit", minute: "2-digit", hour12: false,
+                          })}
+                        </span>
+                      )}
+                      {m.rejected_at && (
+                        <span>
+                          拒絕{" "}
+                          {new Date(m.rejected_at).toLocaleString("zh-TW", {
+                            month: "2-digit", day: "2-digit",
+                            hour: "2-digit", minute: "2-digit", hour12: false,
+                          })}
+                        </span>
+                      )}
+                      {m.cancelled_at && (
+                        <span>
+                          取消{" "}
+                          {new Date(m.cancelled_at).toLocaleString("zh-TW", {
+                            month: "2-digit", day: "2-digit",
+                            hour: "2-digit", minute: "2-digit", hour12: false,
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

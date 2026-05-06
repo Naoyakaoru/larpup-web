@@ -20,8 +20,7 @@ export function getEvent(id: number) {
   return request<Event>(`/events/${id}`);
 }
 
-export function createEvent(data: {
-  script_id: number;
+type CreateEventData = {
   scheduled_at: string;
   location: string;
   host_in_game: boolean;
@@ -29,7 +28,9 @@ export function createEvent(data: {
   allow_cross_gender: boolean;
   offline_male: number;
   offline_female: number;
-}) {
+} & ({ script_id: number } | { script_version_id: number })
+
+export function createEvent(data: CreateEventData) {
   return request<Event>("/events", {
     method: "POST",
     body: JSON.stringify(data),

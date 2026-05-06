@@ -77,6 +77,13 @@ export default function EventsPage() {
                       <span className="text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full">不反串</span>
                     ) : null}
                   </div>
+                  <p className="text-xs text-gray-400 mb-0.5">
+                    {[
+                      event.script.store?.name,
+                      event.script.version_name,
+                      event.script.duration != null ? `${event.script.duration}h` : null,
+                    ].filter(Boolean).join("・")}
+                  </p>
                   <div className="text-sm text-gray-500 space-y-0.5">
                     <div>{formatDate(event.scheduled_at)}</div>
                     <div>{event.location}</div>

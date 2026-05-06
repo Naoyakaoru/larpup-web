@@ -1,11 +1,14 @@
-import { useState, type FormEvent, type ChangeEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { createScript } from '../../api/scripts'
+import { useState, useEffect, type ChangeEvent } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { getScript, updateScript } from '../../api/scripts'
+import type { Script } from '../../types'
 
 const GENRES = [
   [0, '推理'], [1, '還原'], [2, '恐怖'], [3, '情感'],
   [4, '歡樂'], [5, '機制'], [6, '陣營'], [7, '古風'], [8, '現代'],
 ] as const
+
+const GENRE_LABEL_TO_ID: Record<string, number> = Object.fromEntries(GENRES.map(([id, label]) => [label, id]))
 
 const DIFFICULTY_OPTIONS = [
   { value: 'easy', label: '入門' },
@@ -13,8 +16,10 @@ const DIFFICULTY_OPTIONS = [
   { value: 'hard', label: '燒腦' },
 ]
 
-export default function CreateScriptPage() {
+export default function EditScriptPage() {
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [script, setScript] = useState<Script | null>(null)
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -29,6 +34,23 @@ export default function CreateScriptPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  useEffect(() => {
+    if (!id) return
+    getScript(Number(id)).then(s => {
+      setScript(s)
+      setForm({
+        title: s.title,
+        description: s.description ?? '',
+        difficulty: s.difficulty,
+        duration: s.duration ?? '',
+        male_slots: s.male_slots,
+        female_slots: s.female_slots,
+        any_slots: s.any_slots,
+      })
+      setGenres(s.genres.map(label => GENRE_LABEL_TO_ID[label]).filter((id): id is number => id !== undefined))
+    })
+  }, [id])
+
   function set(field: keyof typeof form) {
     return (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
       setForm(f => ({ ...f, [field]: e.target.type === 'number' ? Number(e.target.value) : e.target.value }))
@@ -38,31 +60,32 @@ export default function CreateScriptPage() {
     setGenres(g => g.includes(value) ? g.filter(v => v !== value) : [...g, value])
   }
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
     if (genres.length === 0) { setError('請至少選一個類型'); return }
     setError('')
     setLoading(true)
 
     const data = new FormData()
-    Object.entries(form).forEach(([k, v]) => data.append(k, String(v)))
+    Object.entries(form).forEach(([k, v]) => { if (v !== '') data.append(k, String(v)) })
     genres.forEach(g => data.append('genres[]', String(g)))
     if (coverImage) data.append('cover_image', coverImage)
 
     try {
-      const script = await createScript(data)
-      navigate('/scripts')
-      console.info('Created script:', script.id)
+      await updateScript(Number(id), data)
+      navigate('/admin/scripts')
     } catch (err) {
-      setError(err instanceof Error ? err.message : '建立失敗')
+      setError(err instanceof Error ? err.message : '儲存失敗')
     } finally {
       setLoading(false)
     }
   }
 
+  if (!script) return <p className="text-sm text-gray-400">載入中...</p>
+
   return (
     <div className="max-w-lg">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">新增劇本</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">編輯劇本</h1>
       <form onSubmit={handleSubmit} className="bg-surface border border-gray-200 rounded-lg p-6 space-y-5">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">劇本名稱</label>
@@ -123,6 +146,9 @@ export default function CreateScriptPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">封面圖片</label>
+          {script.cover_image_url && (
+            <img src={script.cover_image_url} className="w-24 h-24 object-cover rounded mb-2 border border-gray-200" />
+          )}
           <input type="file" accept="image/*"
             onChange={e => setCoverImage(e.target.files?.[0] ?? null)}
             className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-sm file:bg-brand file:text-white hover:file:bg-brand-hover" />
@@ -130,10 +156,16 @@ export default function CreateScriptPage() {
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
-        <button type="submit" disabled={loading}
-          className="w-full bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-hover disabled:opacity-50">
-          {loading ? '建立中...' : '建立劇本'}
-        </button>
+        <div className="flex gap-3">
+          <button type="submit" disabled={loading}
+            className="flex-1 bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-hover disabled:opacity-50">
+            {loading ? '儲存中...' : '儲存'}
+          </button>
+          <button type="button" onClick={() => navigate('/admin/scripts')}
+            className="px-4 py-2 rounded-md text-sm text-gray-500 border border-gray-300 hover:bg-gray-50">
+            取消
+          </button>
+        </div>
       </form>
     </div>
   )

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getMyEvents, updateMe } from "../api/users";
+import { getMyEvents, getMyStores, updateMe } from "../api/users";
 import { useAuth } from "../contexts/AuthContext";
 import type { Event } from "../types";
 import { EVENT_STATUS_LABELS as STATUS_LABELS } from "../utils/labels";
@@ -47,6 +47,9 @@ export default function ProfilePage() {
   const { user, login } = useAuth();
   const [hosted, setHosted] = useState<Event[]>([]);
   const [joined, setJoined] = useState<Event[]>([]);
+  const [myStores, setMyStores] = useState<
+    { id: number; name: string; status: string; role: string }[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -61,10 +64,11 @@ export default function ProfilePage() {
   const [saveMsg, setSaveMsg] = useState("");
 
   useEffect(() => {
-    getMyEvents()
-      .then((res) => {
-        setHosted(res.hosted);
-        setJoined(res.joined);
+    Promise.all([getMyEvents(), getMyStores()])
+      .then(([events, stores]) => {
+        setHosted(events.hosted);
+        setJoined(events.joined);
+        setMyStores(stores);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -295,32 +299,82 @@ export default function ProfilePage() {
             <h2 className="font-semibold text-gray-700 mb-3">我參加的活動</h2>
             <EventList events={joined} />
           </section>
+          {myStores.length > 0 && (
+            <section>
+              <h2 className="font-semibold text-gray-700 mb-3">我的店家</h2>
+              <div className="space-y-2">
+                {myStores.map((store) => (
+                  <Link
+                    key={store.id}
+                    to={`/stores/${store.id}/manage`}
+                    className="flex items-center justify-between p-3 bg-surface border border-gray-200 rounded-md hover:border-brand-light hover:shadow-sm transition-all"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {store.name}
+                      </p>
+                      <p className="text-xs text-gray-400">{store.role}</p>
+                    </div>
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
           {user?.is_admin && (
             <section>
               <h2 className="font-semibold text-gray-700 mb-3">管理員</h2>
-              <Link
-                to="/admin/scripts/new"
-                className="flex items-center gap-3 p-3 bg-surface border border-gray-200 rounded-md hover:border-brand-light hover:shadow-sm transition-all"
-              >
-                <span className="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center shrink-0">
-                  <svg
-                    className="w-4 h-4 text-brand"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2.5}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                </span>
-                <span className="text-sm font-medium text-gray-900">
-                  新增劇本
-                </span>
-              </Link>
+              <div className="space-y-2">
+                <Link
+                  to="/admin/scripts"
+                  className="flex items-center gap-3 p-3 bg-surface border border-gray-200 rounded-md hover:border-brand-light hover:shadow-sm transition-all"
+                >
+                  <span className="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center shrink-0">
+                    <svg
+                      className="w-4 h-4 text-brand"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      />
+                    </svg>
+                  </span>
+                  <span className="text-sm font-medium text-gray-900">
+                    劇本管理
+                  </span>
+                </Link>
+                <Link
+                  to="/admin/stores"
+                  className="flex items-center gap-3 p-3 bg-surface border border-gray-200 rounded-md hover:border-brand-light hover:shadow-sm transition-all"
+                >
+                  <span className="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center shrink-0">
+                    <svg
+                      className="w-4 h-4 text-brand"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2.5}
+                        d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+                      />
+                      <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                  </span>
+                  <span className="text-sm font-medium text-gray-900">
+                    店家管理
+                  </span>
+                </Link>
+              </div>
             </section>
           )}
         </div>
