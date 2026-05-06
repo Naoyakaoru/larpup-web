@@ -62,7 +62,7 @@ export default function CreateScriptPage() {
   return (
     <div className="max-w-lg">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">新增劇本</h1>
-      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-surface border border-gray-200 rounded-lg p-6 space-y-5">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">劇本名稱</label>
           <input type="text" value={form.title} onChange={set('title')} required

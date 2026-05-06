@@ -3,10 +3,7 @@ import { Link } from 'react-router-dom'
 import { getMyEvents, updateMe } from '../api/users'
 import { useAuth } from '../contexts/AuthContext'
 import type { Event } from '../types'
-
-const STATUS_LABELS: Record<Event['status'], string> = {
-  recruiting: '招募中', full: '已滿員', completed: '已完成', cancelled: '已取消',
-}
+import { EVENT_STATUS_LABELS as STATUS_LABELS } from '../utils/labels'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString('zh-TW', {
@@ -20,7 +17,13 @@ export default function ProfilePage() {
   const [joined, setJoined] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({ nickname: '', password: '', passwordConfirmation: '' })
+  const [form, setForm] = useState({
+    nickname: '',
+    handle: '',
+    password: '',
+    passwordConfirmation: '',
+    showHostedEvents: false,
+  })
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [saveMsg, setSaveMsg] = useState('')
@@ -33,7 +36,13 @@ export default function ProfilePage() {
   }, [])
 
   function startEdit() {
-    setForm({ nickname: user?.nickname ?? '', password: '', passwordConfirmation: '' })
+    setForm({
+      nickname: user?.nickname ?? '',
+      handle: user?.handle ?? '',
+      password: '',
+      passwordConfirmation: '',
+      showHostedEvents: user?.show_hosted_events ?? false,
+    })
     setAvatarFile(null)
     setAvatarPreview(null)
     setEditing(true)
@@ -52,6 +61,8 @@ export default function ProfilePage() {
       if (avatarFile) {
         const fd = new FormData()
         fd.append('nickname', form.nickname)
+        fd.append('handle', form.handle)
+        fd.append('show_hosted_events', String(form.showHostedEvents))
         fd.append('avatar', avatarFile)
         if (form.password) {
           fd.append('password', form.password)
@@ -59,7 +70,11 @@ export default function ProfilePage() {
         }
         updated = await updateMe(fd)
       } else {
-        const data: Record<string, string> = { nickname: form.nickname }
+        const data: Parameters<typeof updateMe>[0] = {
+          nickname: form.nickname,
+          handle: form.handle,
+          show_hosted_events: form.showHostedEvents,
+        }
         if (form.password) {
           data.password = form.password
           data.password_confirmation = form.passwordConfirmation
@@ -94,7 +109,7 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl">
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+      <div className="bg-surface border border-gray-200 rounded-lg p-6 mb-6">
         {editing ? (
           <div className="space-y-3">
             <div>
@@ -114,6 +129,37 @@ export default function ProfilePage() {
               <label className="block text-xs text-gray-500 mb-1">暱稱</label>
               <input value={form.nickname} onChange={e => setForm(f => ({ ...f, nickname: e.target.value }))}
                 className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                個人頁網址 <span className="text-gray-400 font-normal">（小寫英數字和底線，3–30字）</span>
+              </label>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm text-gray-400">/users/</span>
+                <input
+                  value={form.handle}
+                  onChange={e => setForm(f => ({ ...f, handle: e.target.value }))}
+                  placeholder="your_handle"
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between py-1">
+              <div>
+                <p className="text-sm text-gray-700">公開顯示主辦的活動</p>
+                <p className="text-xs text-gray-400">開啟後，個人頁會顯示你主辦的招募中 / 已滿員活動</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, showHostedEvents: !f.showHostedEvents }))}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  form.showHostedEvents ? 'bg-brand' : 'bg-gray-200'
+                }`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  form.showHostedEvents ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">新密碼（不改請留空）</label>
@@ -141,7 +187,8 @@ export default function ProfilePage() {
                 className="w-14 h-14 rounded-full object-cover border border-gray-200"
               />
               <div>
-                <h1 className="text-xl font-bold text-gray-900 mb-1">{user?.nickname}</h1>
+                <h1 className="text-xl font-bold text-gray-900 mb-0.5">{user?.nickname}</h1>
+                <p className="text-sm text-gray-400">@{user?.handle}</p>
                 <p className="text-sm text-gray-400">{user?.email}</p>
                 {saveMsg && <p className="text-xs text-green-600 mt-1">{saveMsg}</p>}
               </div>
@@ -167,7 +214,7 @@ export default function ProfilePage() {
             <section>
               <h2 className="font-semibold text-gray-700 mb-3">管理員</h2>
               <Link to="/admin/scripts/new"
-                className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-md hover:border-brand-light hover:shadow-sm transition-all">
+                className="flex items-center gap-3 p-3 bg-surface border border-gray-200 rounded-md hover:border-brand-light hover:shadow-sm transition-all">
                 <span className="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center shrink-0">
                   <svg className="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />

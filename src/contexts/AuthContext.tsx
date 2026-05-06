@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { User } from '../types'
+import { getMe } from '../api/users'
 
 interface AuthContextValue {
   user: User | null
@@ -18,24 +19,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const savedToken = localStorage.getItem('larpup_token')
-    const savedUser = localStorage.getItem('larpup_user')
-    if (savedToken && savedUser) {
-      setToken(savedToken)
-      setUser(JSON.parse(savedUser))
+    if (!savedToken) {
+      setIsLoading(false)
+      return
     }
-    setIsLoading(false)
+    setToken(savedToken)
+    getMe()
+      .then(setUser)
+      .catch(() => {
+        localStorage.removeItem('larpup_token')
+        setToken(null)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   function login(newToken: string, newUser: User) {
     localStorage.setItem('larpup_token', newToken)
-    localStorage.setItem('larpup_user', JSON.stringify(newUser))
     setToken(newToken)
     setUser(newUser)
   }
 
   function logout() {
     localStorage.removeItem('larpup_token')
-    localStorage.removeItem('larpup_user')
     setToken(null)
     setUser(null)
   }

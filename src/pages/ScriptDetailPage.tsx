@@ -3,11 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getScript } from '../api/scripts'
 import type { Script } from '../types'
 
-const DIFFICULTY_COLORS = {
-  easy: 'bg-blue-100 text-blue-700',
-  medium: 'bg-orange-100 text-orange-700',
-  hard: 'bg-red-100 text-red-700',
-}
+import { DIFFICULTY_COLORS } from '../utils/labels'
 
 export default function ScriptDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -26,7 +22,7 @@ export default function ScriptDetailPage() {
     <div className="max-w-2xl">
       <button onClick={() => navigate(-1)} className="text-sm text-gray-400 hover:text-gray-600 mb-4">← 返回</button>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-4">
+      <div className="bg-surface rounded-lg border border-gray-200 overflow-hidden mb-4">
         {script.cover_image_url && (
           <img src={script.cover_image_url} alt={script.title}
             className="w-full h-48 object-cover" />
@@ -41,7 +37,7 @@ export default function ScriptDetailPage() {
 
           <div className="flex flex-wrap gap-1.5 mb-4">
             {script.genres.map(g => (
-              <span key={g} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{g}</span>
+              <span key={g} className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{g}</span>
             ))}
           </div>
 

@@ -3,12 +3,7 @@ import { Link } from 'react-router-dom'
 import { getScripts } from '../api/scripts'
 import type { Script } from '../types'
 
-const DIFFICULTY_LABELS = { easy: '入門', medium: '進階', hard: '燒腦' }
-const DIFFICULTY_COLORS = {
-  easy: 'bg-blue-100 text-blue-700',
-  medium: 'bg-orange-100 text-orange-700',
-  hard: 'bg-red-100 text-red-700',
-}
+import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '../utils/labels'
 
 export default function ScriptsPage() {
   const [scripts, setScripts] = useState<Script[]>([])
@@ -45,7 +40,7 @@ export default function ScriptsPage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {scripts.map(script => (
-            <Link key={script.id} to={`/scripts/${script.id}`} className="block bg-white rounded-lg border border-gray-200 p-4 hover:border-brand-light hover:shadow-sm transition-all">
+            <Link key={script.id} to={`/scripts/${script.id}`} className="block bg-surface rounded-lg border border-gray-200 p-4 hover:border-brand-light hover:shadow-sm transition-all">
               {script.cover_image_url && (
                 <img src={script.cover_image_url} alt={script.title}
                   className="w-full h-32 object-cover rounded-md mb-3" />
@@ -58,7 +53,7 @@ export default function ScriptsPage() {
               </div>
               <div className="flex flex-wrap gap-1 mb-2">
                 {script.genres.map(g => (
-                  <span key={g} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{g}</span>
+                  <span key={g} className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{g}</span>
                 ))}
               </div>
               <div className="text-xs text-gray-400">
