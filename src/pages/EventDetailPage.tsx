@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import {
   getEvent,
   joinEvent,
@@ -51,7 +53,8 @@ export default function EventDetailPage() {
   const [actionMsg, setActionMsg] = useState("");
   const [crossGender, setCrossGender] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ location: "", scheduled_at: "", offline_male: 0, offline_female: 0 });
+  const [editForm, setEditForm] = useState({ location: "", offline_male: 0, offline_female: 0 });
+  const [editScheduledAt, setEditScheduledAt] = useState<Date | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -100,7 +103,8 @@ export default function EventDetailPage() {
   }
 
   function startEdit() {
-    setEditForm({ location: event!.location, scheduled_at: event!.scheduled_at, offline_male: event!.offline_male, offline_female: event!.offline_female });
+    setEditForm({ location: event!.location, offline_male: event!.offline_male, offline_female: event!.offline_female });
+    setEditScheduledAt(new Date(event!.scheduled_at));
     setEditing(true);
   }
 
@@ -114,7 +118,7 @@ export default function EventDetailPage() {
         offline_male: editForm.offline_male,
         offline_female: editForm.offline_female,
       };
-      if (!hasOtherMembers) data.scheduled_at = editForm.scheduled_at;
+      if (!hasOtherMembers && editScheduledAt) data.scheduled_at = editScheduledAt.toISOString();
       setEvent(await updateEvent(Number(id), data));
       setEditing(false);
     } catch (err) {
@@ -250,9 +254,23 @@ export default function EventDetailPage() {
                 {!event.members?.some(m => m.user.id !== event.host.id) && (
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">時間</label>
-                    <input type="datetime-local" value={editForm.scheduled_at.slice(0, 16)}
-                      onChange={e => setEditForm(f => ({ ...f, scheduled_at: new Date(e.target.value).toISOString() }))}
-                      className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                    <DatePicker
+                      selected={editScheduledAt}
+                      onChange={setEditScheduledAt}
+                      showTimeSelect
+                      timeIntervals={30}
+                      dateFormat="yyyy/MM/dd HH:mm"
+                      timeFormat="HH:mm"
+                      className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                      wrapperClassName="w-full"
+                      onCalendarOpen={() => {
+                        setTimeout(() => {
+                          const list = document.querySelector('.react-datepicker__time-list');
+                          const items = list?.querySelectorAll('.react-datepicker__time-list-item');
+                          items?.[16]?.scrollIntoView({ block: 'start' });
+                        }, 0);
+                      }}
+                    />
                   </div>
                 )}
                 <div>
@@ -300,8 +318,11 @@ export default function EventDetailPage() {
 
         {user && !isHost && (
           <div className="mt-4 pt-4 border-t border-gray-100">
-            {!myMember && (
+            {(!myMember || myMember.status === "cancelled") && (
               <div className="space-y-3">
+                {myMember?.status === "cancelled" && (
+                  <p className="text-xs text-gray-400">你曾取消報名，可以重新申請</p>
+                )}
                 {event.allow_cross_gender && (
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -324,7 +345,7 @@ export default function EventDetailPage() {
                 </button>
               </div>
             )}
-            {myMember && (
+            {myMember && myMember.status !== "cancelled" && (
               <div className="flex items-center gap-3">
                 <span className="text-sm text-gray-500">
                   我的狀態：
@@ -345,7 +366,7 @@ export default function EventDetailPage() {
         )}
       </div>
 
-      {event.members && event.members.length > 0 && (
+      {event.members && (event.members.length > 0 || event.offline_male > 0 || event.offline_female > 0) && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="font-semibold text-gray-900 mb-3">報名名單</h2>
           <div className="space-y-2">
@@ -382,17 +403,48 @@ export default function EventDetailPage() {
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-3 mt-0.5 text-xs text-gray-400">
-                    {isHost && (
+                  <div className="flex gap-3 mt-0.5 text-xs text-gray-400 flex-wrap">
+                    {((isHost && m.user.id !== event.host.id) || (!isHost && m.user.id === user?.id)) && (
                       <span>申請 {new Date(m.applied_at).toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}</span>
                     )}
                     {m.confirmed_at && (
                       <span>確認 {new Date(m.confirmed_at).toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}</span>
                     )}
+                    {m.rejected_at && (
+                      <span>拒絕 {new Date(m.rejected_at).toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}</span>
+                    )}
+                    {m.leave_requested_at && (
+                      <span>申請下車 {new Date(m.leave_requested_at).toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}</span>
+                    )}
+                    {m.cancelled_at && (
+                      <span>取消 {new Date(m.cancelled_at).toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}</span>
+                    )}
                   </div>
                 </div>
               );
             })}
+            {Array.from({ length: event.offline_male }).map((_, i) => (
+              <div key={`offline-male-${i}`} className="py-1.5 border-b border-gray-50 last:border-0">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gray-400 italic">線下成員</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-600">男</span>
+                  </div>
+                  <span className="text-gray-400 text-xs">已確認</span>
+                </div>
+              </div>
+            ))}
+            {Array.from({ length: event.offline_female }).map((_, i) => (
+              <div key={`offline-female-${i}`} className="py-1.5 border-b border-gray-50 last:border-0">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gray-400 italic">線下成員</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-pink-100 text-pink-600">女</span>
+                  </div>
+                  <span className="text-gray-400 text-xs">已確認</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -21,6 +21,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ nickname: '', password: '', passwordConfirmation: '' })
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [saveMsg, setSaveMsg] = useState('')
 
   useEffect(() => {
@@ -32,18 +34,38 @@ export default function ProfilePage() {
 
   function startEdit() {
     setForm({ nickname: user?.nickname ?? '', password: '', passwordConfirmation: '' })
+    setAvatarFile(null)
+    setAvatarPreview(null)
     setEditing(true)
     setSaveMsg('')
   }
 
+  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setAvatarFile(file)
+    setAvatarPreview(file ? URL.createObjectURL(file) : null)
+  }
+
   async function handleSave() {
     try {
-      const data: Record<string, string> = { nickname: form.nickname }
-      if (form.password) {
-        data.password = form.password
-        data.password_confirmation = form.passwordConfirmation
+      let updated
+      if (avatarFile) {
+        const fd = new FormData()
+        fd.append('nickname', form.nickname)
+        fd.append('avatar', avatarFile)
+        if (form.password) {
+          fd.append('password', form.password)
+          fd.append('password_confirmation', form.passwordConfirmation)
+        }
+        updated = await updateMe(fd)
+      } else {
+        const data: Record<string, string> = { nickname: form.nickname }
+        if (form.password) {
+          data.password = form.password
+          data.password_confirmation = form.passwordConfirmation
+        }
+        updated = await updateMe(data)
       }
-      const updated = await updateMe(data)
       login(localStorage.getItem('larpup_token')!, updated)
       setEditing(false)
       setSaveMsg('已儲存')
@@ -76,6 +98,19 @@ export default function ProfilePage() {
         {editing ? (
           <div className="space-y-3">
             <div>
+              <label className="block text-xs text-gray-500 mb-1">頭貼</label>
+              <div className="flex items-center gap-3">
+                <img
+                  src={avatarPreview ?? user?.avatar_url ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.nickname ?? '')}&background=random`}
+                  className="w-14 h-14 rounded-full object-cover border border-gray-200"
+                />
+                <label className="cursor-pointer text-sm text-brand hover:text-brand-hover">
+                  選擇圖片
+                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                </label>
+              </div>
+            </div>
+            <div>
               <label className="block text-xs text-gray-500 mb-1">暱稱</label>
               <input value={form.nickname} onChange={e => setForm(f => ({ ...f, nickname: e.target.value }))}
                 className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
@@ -100,10 +135,16 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 mb-1">{user?.nickname}</h1>
-              <p className="text-sm text-gray-400">{user?.email}</p>
-              {saveMsg && <p className="text-xs text-green-600 mt-1">{saveMsg}</p>}
+            <div className="flex items-center gap-4">
+              <img
+                src={user?.avatar_url ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.nickname ?? '')}&background=random`}
+                className="w-14 h-14 rounded-full object-cover border border-gray-200"
+              />
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 mb-1">{user?.nickname}</h1>
+                <p className="text-sm text-gray-400">{user?.email}</p>
+                {saveMsg && <p className="text-xs text-green-600 mt-1">{saveMsg}</p>}
+              </div>
             </div>
             <button onClick={startEdit} className="text-sm text-gray-400 hover:text-gray-600">編輯</button>
           </div>
