@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getEvent, joinEvent, leaveEvent, updateMember } from '../api/events'
 import { useAuth } from '../contexts/AuthContext'
 import type { Event, EventMember } from '../types'
@@ -18,6 +18,20 @@ function formatDate(iso: string) {
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', hour12: false,
   })
+}
+
+function SlotRow({ label, total, offline }: { label: string; total: number; offline?: number }) {
+  if (total === 0) return null
+  const offlineCount = offline ?? 0
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-gray-400">{label}</span>
+      <span className="text-gray-900">
+        缺 {total - offlineCount} 人
+        {offlineCount > 0 && <span className="text-xs text-gray-400 ml-1">（線下 {offlineCount}）</span>}
+      </span>
+    </div>
+  )
 }
 
 export default function EventDetailPage() {
@@ -67,6 +81,7 @@ export default function EventDetailPage() {
 
   const isHost = user?.id === event.host.id
   const myMember = event.members?.find(m => m.user.id === user?.id)
+  const { male_slots, female_slots, any_slots } = event.script
 
   return (
     <div className="max-w-2xl">
@@ -74,17 +89,39 @@ export default function EventDetailPage() {
 
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-4">
         <div className="flex items-start justify-between mb-4">
-          <h1 className="text-xl font-bold text-gray-900">{event.script.title}</h1>
-          <span className="text-sm bg-brand-light/30 text-brand-hover px-2 py-0.5 rounded-full">
+          <Link to={`/scripts/${event.script.id}`}
+            className="text-xl font-bold text-gray-900 hover:text-brand transition-colors">
+            {event.script.title}
+          </Link>
+          <span className="shrink-0 ml-3 text-sm bg-brand-light/30 text-brand-hover px-2 py-0.5 rounded-full">
             {STATUS_LABELS[event.status]}
           </span>
         </div>
-        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-          <div><dt className="text-gray-400">時間</dt><dd className="text-gray-900">{formatDate(event.scheduled_at)}</dd></div>
-          <div><dt className="text-gray-400">地點</dt><dd className="text-gray-900">{event.location}</dd></div>
-          <div><dt className="text-gray-400">主辦</dt><dd className="text-gray-900">{event.host.nickname}</dd></div>
-          <div><dt className="text-gray-400">人數</dt><dd className="text-gray-900">{event.confirmed_count} / {event.script.total_slots} 人（剩 {event.available_slots}）</dd></div>
+
+        <dl className="space-y-2 text-sm mb-4">
+          <div className="flex justify-between">
+            <dt className="text-gray-400">時間</dt>
+            <dd className="text-gray-900">{formatDate(event.scheduled_at)}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-gray-400">地點</dt>
+            <dd className="text-gray-900">{event.location}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-gray-400">主辦</dt>
+            <dd className="text-gray-900">{event.host.nickname}</dd>
+          </div>
         </dl>
+
+        <div className="border-t border-gray-100 pt-3 space-y-1.5">
+          <SlotRow label="男生" total={male_slots} offline={event.offline_male} />
+          <SlotRow label="女生" total={female_slots} offline={event.offline_female} />
+          <SlotRow label="不限" total={any_slots} />
+          <div className="flex items-center justify-between text-sm pt-1">
+            <span className="text-gray-400">總缺額</span>
+            <span className="font-medium text-gray-900">{event.available_slots} 人</span>
+          </div>
+        </div>
 
         {actionMsg && <p className="mt-4 text-sm text-brand">{actionMsg}</p>}
 
@@ -121,27 +158,32 @@ export default function EventDetailPage() {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="font-semibold text-gray-900 mb-3">報名名單</h2>
           <div className="space-y-2">
-            {event.members.map(m => (
-              <div key={m.id} className="flex items-center justify-between text-sm">
-                <span className="text-gray-700">{m.user.nickname}</span>
-                <div className="flex items-center gap-2">
-                  {m.cross_gender && <span className="text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded">反串</span>}
-                  <span className="text-gray-400">{MEMBER_STATUS_LABELS[m.status]}</span>
-                  {isHost && m.status === 'pending' && (
-                    <>
-                      <button onClick={() => handleMemberUpdate(m.id, 'confirmed')}
-                        className="text-green-600 hover:text-green-800">確認</button>
-                      <button onClick={() => handleMemberUpdate(m.id, 'rejected')}
-                        className="text-red-500 hover:text-red-700">拒絕</button>
-                    </>
-                  )}
-                  {isHost && m.status === 'leave_requested' && (
-                    <button onClick={() => handleMemberUpdate(m.id, 'cancelled')}
-                      className="text-orange-500 hover:text-orange-700">同意退出</button>
-                  )}
+            {event.members.map(m => {
+              const showName = isHost || m.user.id === user?.id || m.status !== 'pending'
+              return (
+                <div key={m.id} className="flex items-center justify-between text-sm">
+                  <span className={showName ? 'text-gray-700' : 'text-gray-400 italic'}>
+                    {showName ? m.user.nickname : '匿名'}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {m.cross_gender && <span className="text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded">反串</span>}
+                    <span className="text-gray-400">{MEMBER_STATUS_LABELS[m.status]}</span>
+                    {isHost && m.status === 'pending' && (
+                      <>
+                        <button onClick={() => handleMemberUpdate(m.id, 'confirmed')}
+                          className="text-green-600 hover:text-green-800">確認</button>
+                        <button onClick={() => handleMemberUpdate(m.id, 'rejected')}
+                          className="text-red-500 hover:text-red-700">拒絕</button>
+                      </>
+                    )}
+                    {isHost && m.status === 'leave_requested' && (
+                      <button onClick={() => handleMemberUpdate(m.id, 'cancelled')}
+                        className="text-orange-500 hover:text-orange-700">同意退出</button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
