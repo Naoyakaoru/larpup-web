@@ -25,6 +25,7 @@ export interface Event {
   script: { id: number; title: string; total_slots: number; male_slots: number; female_slots: number; any_slots: number }
   host: { id: number; nickname: string }
   host_in_game: boolean
+  host_cross_gender: boolean
   allow_cross_gender: boolean
   scheduled_at: string
   location: string
