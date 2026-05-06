@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getScripts } from '../api/scripts'
 import type { Script } from '../types'
 
@@ -44,7 +45,7 @@ export default function ScriptsPage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {scripts.map(script => (
-            <div key={script.id} className="bg-white rounded-lg border border-gray-200 p-4">
+            <Link key={script.id} to={`/scripts/${script.id}`} className="block bg-white rounded-lg border border-gray-200 p-4 hover:border-brand-light hover:shadow-sm transition-all">
               {script.cover_image_url && (
                 <img src={script.cover_image_url} alt={script.title}
                   className="w-full h-32 object-cover rounded-md mb-3" />
@@ -70,7 +71,7 @@ export default function ScriptsPage() {
               {script.description && (
                 <p className="mt-2 text-xs text-gray-500 line-clamp-2">{script.description}</p>
               )}
-            </div>
+            </Link>
           ))}
         </div>
       )}

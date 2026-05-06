@@ -10,6 +10,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ProfilePage from './pages/ProfilePage'
 import MessagesPage from './pages/MessagesPage'
+import ScriptDetailPage from './pages/ScriptDetailPage'
 import AdminRoute from './components/AdminRoute'
 import CreateScriptPage from './pages/admin/CreateScriptPage'
 
@@ -20,6 +21,7 @@ const router = createBrowserRouter([
       { index: true, element: <EventsPage /> },
       { path: 'events/:id', element: <EventDetailPage /> },
       { path: 'scripts', element: <ScriptsPage /> },
+      { path: 'scripts/:id', element: <ScriptDetailPage /> },
       { path: 'messages', element: <MessagesPage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
