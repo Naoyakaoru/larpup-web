@@ -25,6 +25,8 @@ export interface Event {
   script: { id: number; title: string; total_slots: number; male_slots: number; female_slots: number; any_slots: number }
   host: { id: number; nickname: string }
   allow_cross_gender: boolean
+  offline_male: number
+  offline_female: number
   scheduled_at: string
   location: string
   status: 'recruiting' | 'full' | 'completed' | 'cancelled'

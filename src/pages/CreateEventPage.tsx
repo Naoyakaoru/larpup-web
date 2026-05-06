@@ -15,6 +15,8 @@ export default function CreateEventPage() {
     host_in_game: true,
     host_cross_gender: false,
     allow_cross_gender: false,
+    offline_male: 0,
+    offline_female: 0,
   });
   const [scheduledAt, setScheduledAt] = useState<Date | null>(null);
   const [error, setError] = useState("");
@@ -55,6 +57,8 @@ export default function CreateEventPage() {
         host_in_game: form.host_in_game,
         host_cross_gender: form.host_cross_gender,
         allow_cross_gender: form.allow_cross_gender,
+        offline_male: form.offline_male,
+        offline_female: form.offline_female,
       });
       navigate(`/events/${event.id}`);
     } catch (err) {
@@ -138,9 +142,25 @@ export default function CreateEventPage() {
               />
               <span className="text-sm text-gray-700">開放反串</span>
             </label>
+            <div className="space-y-1.5">
+              <p className="text-xs text-gray-500 font-medium">線下已確定朋友</p>
+              {([['offline_male', '男'] , ['offline_female', '女']] as const).map(([field, label]) => (
+                <div key={field} className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">{label}生</span>
+                  <div className="flex items-center gap-2">
+                    <button type="button"
+                      onClick={() => setForm(f => ({ ...f, [field]: Math.max(0, f[field] - 1) }))}
+                      className="w-6 h-6 rounded-full border border-gray-300 text-gray-600 text-sm flex items-center justify-center hover:border-brand hover:text-brand">−</button>
+                    <span className="text-sm font-medium w-4 text-center">{form[field]}</span>
+                    <button type="button"
+                      onClick={() => setForm(f => ({ ...f, [field]: f[field] + 1 }))}
+                      className="w-6 h-6 rounded-full border border-gray-300 text-gray-600 text-sm flex items-center justify-center hover:border-brand hover:text-brand">+</button>
+                  </div>
+                </div>
+              ))}
+            </div>
             <p className="text-xs text-gray-400">
-              實際招募人數：
-              {selectedScript.total_slots - (form.host_in_game ? 1 : 0)} 人
+              實際還需要：{selectedScript.total_slots - (form.host_in_game ? 1 : 0) - form.offline_male - form.offline_female} 人
             </p>
           </div>
         )}
