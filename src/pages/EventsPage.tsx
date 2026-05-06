@@ -47,7 +47,7 @@ export default function EventsPage() {
               onClick={() => setStatus(s)}
               className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
                 status === s
-                  ? 'bg-purple-600 text-white border-purple-600'
+                  ? 'bg-brand text-white border-brand'
                   : 'border-gray-300 text-gray-600 hover:border-gray-400'
               }`}
             >
@@ -67,7 +67,7 @@ export default function EventsPage() {
             <Link
               key={event.id}
               to={`/events/${event.id}`}
-              className="block bg-white rounded-lg border border-gray-200 p-4 hover:border-purple-300 hover:shadow-sm transition-all"
+              className="block bg-white rounded-lg border border-gray-200 p-4 hover:border-brand-light hover:shadow-sm transition-all"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">

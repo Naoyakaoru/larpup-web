@@ -74,7 +74,7 @@ export default function EventDetailPage() {
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-4">
         <div className="flex items-start justify-between mb-4">
           <h1 className="text-xl font-bold text-gray-900">{event.script.title}</h1>
-          <span className="text-sm bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+          <span className="text-sm bg-brand-light/30 text-brand-hover px-2 py-0.5 rounded-full">
             {STATUS_LABELS[event.status]}
           </span>
         </div>
@@ -85,13 +85,13 @@ export default function EventDetailPage() {
           <div><dt className="text-gray-400">人數</dt><dd className="text-gray-900">{event.confirmed_count} / {event.script.total_slots} 人（剩 {event.available_slots}）</dd></div>
         </dl>
 
-        {actionMsg && <p className="mt-4 text-sm text-purple-600">{actionMsg}</p>}
+        {actionMsg && <p className="mt-4 text-sm text-brand">{actionMsg}</p>}
 
         {user && !isHost && (
           <div className="mt-4 pt-4 border-t border-gray-100">
             {!myMember && (
               <button onClick={handleJoin} disabled={event.status === 'full' || event.status === 'cancelled'}
-                className="bg-purple-600 text-white text-sm px-4 py-2 rounded-md hover:bg-purple-700 disabled:opacity-50">
+                className="bg-brand text-white text-sm px-4 py-2 rounded-md hover:bg-brand-hover disabled:opacity-50">
                 申請加入
               </button>
             )}

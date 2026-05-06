@@ -43,20 +43,20 @@ export default function RegisterPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
             <input
               type={type} value={form[field]} onChange={set(field)} required
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </div>
         ))}
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           type="submit" disabled={loading}
-          className="w-full bg-purple-600 text-white py-2 rounded-md text-sm font-medium hover:bg-purple-700 disabled:opacity-50"
+          className="w-full bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-hover disabled:opacity-50"
         >
           {loading ? '註冊中...' : '建立帳號'}
         </button>
       </form>
       <p className="mt-4 text-sm text-gray-500 text-center">
-        已有帳號？<Link to="/login" className="text-purple-600 hover:underline">登入</Link>
+        已有帳號？<Link to="/login" className="text-brand hover:underline">登入</Link>
       </p>
     </div>
   )

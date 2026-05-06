@@ -45,7 +45,7 @@ export default function CreateEventPage() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">劇本</label>
           <select value={form.script_id} onChange={set('script_id')} required
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
             <option value="">請選擇劇本</option>
             {scripts.map(s => (
               <option key={s.id} value={s.id}>
@@ -57,19 +57,19 @@ export default function CreateEventPage() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">活動時間</label>
           <input type="datetime-local" value={form.scheduled_at} onChange={set('scheduled_at')} required
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">地點</label>
           <input type="text" value={form.location} onChange={set('location')} required
             placeholder="例：台北市信義區 / 謎境劇本殺台北店"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button type="submit" disabled={loading}
-          className="w-full bg-purple-600 text-white py-2 rounded-md text-sm font-medium hover:bg-purple-700 disabled:opacity-50">
+          className="w-full bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-hover disabled:opacity-50">
           {loading ? '建立中...' : '建立活動'}
         </button>
       </form>

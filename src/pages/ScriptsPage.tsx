@@ -30,7 +30,7 @@ export default function ScriptsPage() {
             <button key={d} onClick={() => setDifficulty(d)}
               className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
                 difficulty === d
-                  ? 'bg-purple-600 text-white border-purple-600'
+                  ? 'bg-brand text-white border-brand'
                   : 'border-gray-300 text-gray-600 hover:border-gray-400'
               }`}>
               {d === '' ? '全部' : DIFFICULTY_LABELS[d]}

@@ -1,7 +1,32 @@
 @import "tailwindcss";
 
+@theme {
+  /* Option A — 暖橘（預設） */
+  --color-brand: #F59E0B;
+  --color-brand-light: #FDE68A;
+  --color-brand-hover: #D97706;
+  --color-accent: #A78BFA;
+  --color-bg-base: #FFF7ED;
+  --color-text-base: #1F2937;
+
+  /* Option B — 深色模式 */
+  --color-dark-primary: #6366F1;
+  --color-dark-secondary: #8B5CF6;
+  --color-dark-bg: #0F172A;
+  --color-dark-text: #E5E7EB;
+}
+
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  background-color: var(--color-bg-base);
+  color: var(--color-text-base);
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--color-dark-bg);
+    color: var(--color-dark-text);
+  }
 }
