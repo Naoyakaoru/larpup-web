@@ -1,21 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getEvents } from '../api/events'
+import { EVENT_STATUS_LABELS as STATUS_LABELS, EVENT_STATUS_COLORS as STATUS_COLORS } from '../utils/labels'
 import type { Event } from '../types'
-
-const STATUS_LABELS: Record<Event['status'], string> = {
-  recruiting: '招募中',
-  full: '已滿員',
-  completed: '已完成',
-  cancelled: '已取消',
-}
-
-const STATUS_COLORS: Record<Event['status'], string> = {
-  recruiting: 'bg-green-100 text-green-700',
-  full: 'bg-yellow-100 text-yellow-700',
-  completed: 'bg-gray-100 text-gray-500',
-  cancelled: 'bg-red-100 text-red-500',
-}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString('zh-TW', {
@@ -67,7 +54,7 @@ export default function EventsPage() {
             <Link
               key={event.id}
               to={`/events/${event.id}`}
-              className="block bg-white rounded-lg border border-gray-200 p-4 hover:border-brand-light hover:shadow-sm transition-all"
+              className="block bg-surface rounded-lg border border-gray-200 p-4 hover:border-brand-light hover:shadow-sm transition-all"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
@@ -78,16 +65,16 @@ export default function EventsPage() {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1 mb-1">
-                    <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
+                    <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">
                       {event.script.difficulty_label}
                     </span>
                     {event.script.genres.map(g => (
-                      <span key={g} className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">{g}</span>
+                      <span key={g} className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">{g}</span>
                     ))}
                     {event.allow_cross_gender ? (
                       <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium">開放反串</span>
                     ) : (event.script.male_slots > 0 || event.script.female_slots > 0) ? (
-                      <span className="text-xs bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-full">不反串</span>
+                      <span className="text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full">不反串</span>
                     ) : null}
                   </div>
                   <div className="text-sm text-gray-500 space-y-0.5">

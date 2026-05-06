@@ -14,28 +14,14 @@ import {
 } from "../api/events";
 import { useAuth } from "../contexts/AuthContext";
 import { calcRemainingAfterOnline, canAddOffline } from "../utils/slotCalc";
-import type { Event, EventMember } from "../types";
+import type { Event } from "../types";
 
-const DIFFICULTY_COLORS: Record<"easy" | "medium" | "hard", string> = {
-  easy: "bg-blue-100 text-blue-700",
-  medium: "bg-orange-100 text-orange-700",
-  hard: "bg-red-100 text-red-700",
-};
-
-const STATUS_LABELS: Record<Event["status"], string> = {
-  recruiting: "招募中",
-  full: "已滿員",
-  completed: "已完成",
-  cancelled: "已取消",
-};
-
-const MEMBER_STATUS_LABELS: Record<EventMember["status"], string> = {
-  pending: "待審核",
-  confirmed: "已確認",
-  rejected: "已拒絕",
-  cancelled: "已取消",
-  leave_requested: "申請退出",
-};
+import {
+  DIFFICULTY_COLORS,
+  EVENT_STATUS_LABELS as STATUS_LABELS,
+  EVENT_STATUS_COLORS as STATUS_COLORS,
+  MEMBER_STATUS_LABELS,
+} from "../utils/labels";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString("zh-TW", {
@@ -221,7 +207,7 @@ export default function EventDetailPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6 mb-4">
+      <div className="bg-surface rounded-lg border border-gray-200 p-6 mb-4">
         <div className="flex items-start justify-between mb-4">
           <Link
             to={`/scripts/${event.script.id}`}
@@ -229,7 +215,9 @@ export default function EventDetailPage() {
           >
             {event.script.title}
           </Link>
-          <span className="shrink-0 ml-3 text-sm bg-brand-light/30 text-brand-hover px-2 py-0.5 rounded-full">
+          <span
+            className={`shrink-0 ml-3 text-sm px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[event.status]}`}
+          >
             {STATUS_LABELS[event.status]}
           </span>
         </div>
@@ -243,7 +231,7 @@ export default function EventDetailPage() {
           {event.script.genres.map((g) => (
             <span
               key={g}
-              className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full"
+              className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full"
             >
               {g}
             </span>
@@ -267,7 +255,11 @@ export default function EventDetailPage() {
           {!hostInGame && (
             <div className="flex justify-between">
               <dt className="text-gray-400">主辦</dt>
-              <dd className="text-gray-900">{event.host.nickname}</dd>
+              <dd>
+                <Link to={`/users/${event.host.handle}`} className="text-gray-900 hover:text-brand transition-colors">
+                  {event.host.nickname}
+                </Link>
+              </dd>
             </div>
           )}
           <div className="flex justify-between">
@@ -500,7 +492,7 @@ export default function EventDetailPage() {
         (event.members.length > 0 ||
           event.offline_male > 0 ||
           event.offline_female > 0) && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-surface rounded-lg border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-3">報名名單</h2>
             <div className="space-y-2">
               {event.members.map((m) => {
@@ -513,17 +505,26 @@ export default function EventDetailPage() {
                   >
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span
-                          className={
-                            showName
-                              ? "text-gray-700 font-medium"
-                              : "text-gray-400 italic"
-                          }
-                        >
-                          {showName ? m.user.nickname : "匿名"}
-                        </span>
+                        {showName && m.user.id === event.host.id ? (
+                          <Link
+                            to={`/users/${m.user.handle}`}
+                            className="text-gray-700 font-medium hover:text-brand transition-colors"
+                          >
+                            {m.user.nickname}
+                          </Link>
+                        ) : (
+                          <span
+                            className={
+                              showName
+                                ? "text-gray-700 font-medium"
+                                : "text-gray-400 italic"
+                            }
+                          >
+                            {showName ? m.user.nickname : "匿名"}
+                          </span>
+                        )}
                         {m.user.id === event.host.id && (
-                          <span className="text-xs text-brand-hover bg-brand-light/40 px-1.5 py-0.5 rounded">
+                          <span className="text-xs bg-brand text-white px-1.5 py-0.5 rounded">
                             主揪
                           </span>
                         )}
@@ -680,7 +681,7 @@ export default function EventDetailPage() {
         )}
 
       {event.audit_logs && event.audit_logs.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-surface rounded-lg border border-gray-200 p-6">
           <h2 className="font-semibold text-gray-900 mb-3">變更紀錄</h2>
           <div className="space-y-2">
             {event.audit_logs.map((log, i) => (

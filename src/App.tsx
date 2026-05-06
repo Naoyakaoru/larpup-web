@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import EventsPage from './pages/EventsPage'
@@ -13,6 +14,7 @@ import MessagesPage from './pages/MessagesPage'
 import ScriptDetailPage from './pages/ScriptDetailPage'
 import AdminRoute from './components/AdminRoute'
 import CreateScriptPage from './pages/admin/CreateScriptPage'
+import UserProfilePage from './pages/UserProfilePage'
 
 const router = createBrowserRouter([
   {
@@ -23,6 +25,7 @@ const router = createBrowserRouter([
       { path: 'scripts', element: <ScriptsPage /> },
       { path: 'scripts/:id', element: <ScriptDetailPage /> },
       { path: 'messages', element: <MessagesPage /> },
+      { path: 'users/:handle', element: <UserProfilePage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       {
@@ -44,8 +47,10 @@ const router = createBrowserRouter([
 
 export default function App() {
   return (
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </ThemeProvider>
   )
 }

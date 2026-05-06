@@ -1,19 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  /* Option A — 暖橘（預設） */
-  --color-brand: #F59E0B;
-  --color-brand-light: #FDE68A;
-  --color-brand-hover: #D97706;
-  --color-accent: #A78BFA;
-  --color-bg-base: #FFF7ED;
-  --color-text-base: #1F2937;
+  /* 方案A — Puppy 活潑系（日間） */
+  --color-brand: #f59e0b; /* 主色 / 暖橘 */
+  --color-brand-light: #fde68a; /* 次色 / 奶油黃 */
+  --color-brand-hover: #d97706; /* 主色 hover */
+  --color-accent: #a78bfa; /* 輔色 / 柔紫 */
+  --color-bg-base: #fff7ed; /* 背景 / 淡米橘 */
+  --color-text-base: #1f2937; /* 文字 / 深灰 */
 
-  /* Option B — 深色模式 */
-  --color-dark-primary: #6366F1;
-  --color-dark-secondary: #8B5CF6;
-  --color-dark-bg: #0F172A;
-  --color-dark-text: #E5E7EB;
+  /* Semantic surface token — 卡片/容器背景 */
+  --color-surface: #ffffff;
+  --color-surface-2: #f9fafb;
 }
 
 body {
@@ -24,11 +22,138 @@ body {
   color: var(--color-text-base);
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: var(--color-dark-bg);
-    color: var(--color-dark-text);
-  }
+/* Dark mode — 方案B 夜晚冒險 Puppy */
+.dark {
+  /* 覆寫 Tailwind 灰階色板（反轉）讓所有元件自動切換 */
+  --color-gray-50: #0f172a;
+  --color-gray-100: #1e293b;
+  --color-gray-200: #334155;
+  --color-gray-300: #475569;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #cbd5e1;
+  --color-gray-600: #e2e8f0;
+  --color-gray-700: #e2e8f0;
+  --color-gray-800: #f1f5f9;
+  --color-gray-900: #f8fafc;
+
+  /* Surface tokens — 卡片/容器在深色模式變深 */
+  --color-surface: #1e293b;
+  --color-surface-2: #0f172a;
+
+  /* 狀態 tag 顏色 — 深色背景 + 淺色文字 */
+  --color-green-50: #052e16;
+  --color-green-100: #14532d;
+  --color-green-600: #4ade80;
+  --color-green-700: #86efac;
+  --color-green-800: #4ade80;
+
+  --color-yellow-100: #451a03;
+  --color-yellow-700: #fde68a;
+
+  --color-red-50: #1f0a0a;
+  --color-red-100: #450a0a;
+  --color-red-200: #7f1d1d;
+  --color-red-500: #fca5a5;
+  --color-red-600: #fca5a5;
+  --color-red-700: #fca5a5;
+  --color-red-800: #f87171;
+
+  --color-purple-100: #2e1065;
+  --color-purple-700: #c4b5fd;
+
+  --color-blue-100: #1e3a8a;
+  --color-blue-600: #93c5fd;
+  --color-blue-700: #93c5fd;
+
+  --color-pink-100: #500724;
+  --color-pink-600: #f9a8d4;
+
+  --color-orange-100: #431407;
+  --color-orange-700: #fdba74;
+
+  /* 品牌色 — 方案B 色碼 */
+  --color-brand: #6366f1; /* 主色 / 靛紫 */
+  --color-brand-light: #8b5cf6; /* 次色 / 紫 */
+  --color-brand-hover: #4f46e5; /* 主色 hover（偏深一階） */
+  --color-accent: #f59e0b; /* 強調 / 橘（方案B 沿用）*/
+
+  /* body 底色 */
+  --color-bg-base: #0f172a;
+  --color-text-base: #e5e7eb;
+}
+
+.dark body {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-base);
+}
+
+/* Form inputs in dark mode */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #1e293b;
+  color: #e5e7eb;
+  border-color: #334155;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b;
+}
+
+/* react-datepicker dark mode */
+.dark .react-datepicker {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #e5e7eb;
+}
+.dark .react-datepicker__header {
+  background-color: #1e293b;
+  border-bottom-color: #334155;
+}
+.dark .react-datepicker__current-month,
+.dark .react-datepicker-time__header {
+  color: #f1f5f9;
+}
+.dark .react-datepicker__day-name {
+  color: #94a3b8;
+}
+.dark .react-datepicker__day {
+  color: #cbd5e1;
+}
+.dark .react-datepicker__day:hover {
+  background-color: #4338ca;
+  color: #fff;
+}
+.dark .react-datepicker__day--selected,
+.dark .react-datepicker__day--keyboard-selected {
+  background-color: #6366f1 !important;
+  color: #fff !important;
+}
+.dark .react-datepicker__day--today {
+  color: #818cf8;
+}
+.dark .react-datepicker__day--outside-month {
+  color: #475569;
+}
+.dark .react-datepicker__navigation-icon::before {
+  border-color: #94a3b8;
+}
+.dark .react-datepicker__time-container {
+  border-left-color: #334155;
+}
+.dark .react-datepicker__time-list {
+  background-color: #1e293b;
+}
+.dark .react-datepicker__time-list-item {
+  color: #cbd5e1;
+}
+.dark .react-datepicker__time-list-item:hover {
+  background-color: #4338ca !important;
+  color: #fff;
+}
+.dark .react-datepicker__time-list-item--selected {
+  background-color: #6366f1 !important;
+  color: #fff !important;
 }
 
 /* react-datepicker overrides */

@@ -1,16 +1,25 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import type { User } from "../types";
 
 const TEST_USER: User = {
   id: 1,
+  handle: "tester",
   email: "test@example.com",
   nickname: "Tester",
   gender: "male",
   avatar_url: null,
   is_admin: false,
+  show_hosted_events: false,
 };
+
+vi.mock("../api/users", () => ({
+  getMe: vi.fn(),
+}));
+
+import { getMe } from "../api/users";
+const mockGetMe = vi.mocked(getMe);
 
 function AuthConsumer() {
   const { user, token, login, logout, isLoading } = useAuth();
@@ -35,6 +44,7 @@ function renderWithProvider() {
 
 beforeEach(() => {
   localStorage.clear();
+  vi.clearAllMocks();
 });
 
 describe("AuthContext – initial state", () => {
@@ -44,14 +54,25 @@ describe("AuthContext – initial state", () => {
     expect(screen.getByTestId("nickname")).toHaveTextContent("none");
   });
 
-  it("restores token and user from localStorage on mount", async () => {
+  it("restores token and calls getMe to hydrate user on mount", async () => {
     localStorage.setItem("larpup_token", "saved-tok");
-    localStorage.setItem("larpup_user", JSON.stringify(TEST_USER));
+    mockGetMe.mockResolvedValueOnce(TEST_USER);
 
     renderWithProvider();
 
     expect(await screen.findByTestId("token")).toHaveTextContent("saved-tok");
     expect(screen.getByTestId("nickname")).toHaveTextContent("Tester");
+    expect(mockGetMe).toHaveBeenCalledOnce();
+  });
+
+  it("clears token when getMe fails on mount", async () => {
+    localStorage.setItem("larpup_token", "bad-tok");
+    mockGetMe.mockRejectedValueOnce(new Error("401"));
+
+    renderWithProvider();
+
+    expect(await screen.findByTestId("token")).toHaveTextContent("none");
+    expect(localStorage.getItem("larpup_token")).toBeNull();
   });
 });
 
@@ -74,24 +95,12 @@ describe("AuthContext – login", () => {
 
     expect(localStorage.getItem("larpup_token")).toBe("tok-123");
   });
-
-  it("persists user to localStorage key larpup_user", async () => {
-    renderWithProvider();
-    const btn = await screen.findByRole("button", { name: "login" });
-
-    act(() => btn.click());
-
-    expect(JSON.parse(localStorage.getItem("larpup_user")!)).toMatchObject({
-      id: 1,
-      nickname: "Tester",
-    });
-  });
 });
 
 describe("AuthContext – logout", () => {
   it("clears token and user from state after logout", async () => {
     localStorage.setItem("larpup_token", "saved-tok");
-    localStorage.setItem("larpup_user", JSON.stringify(TEST_USER));
+    mockGetMe.mockResolvedValueOnce(TEST_USER);
 
     renderWithProvider();
     const btn = await screen.findByRole("button", { name: "logout" });
@@ -102,9 +111,9 @@ describe("AuthContext – logout", () => {
     expect(screen.getByTestId("nickname")).toHaveTextContent("none");
   });
 
-  it("removes larpup_token and larpup_user from localStorage", async () => {
+  it("removes larpup_token from localStorage on logout", async () => {
     localStorage.setItem("larpup_token", "saved-tok");
-    localStorage.setItem("larpup_user", JSON.stringify(TEST_USER));
+    mockGetMe.mockResolvedValueOnce(TEST_USER);
 
     renderWithProvider();
     const btn = await screen.findByRole("button", { name: "logout" });
@@ -112,6 +121,5 @@ describe("AuthContext – logout", () => {
     act(() => btn.click());
 
     expect(localStorage.getItem("larpup_token")).toBeNull();
-    expect(localStorage.getItem("larpup_user")).toBeNull();
   });
 });

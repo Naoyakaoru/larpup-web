@@ -1,10 +1,21 @@
 export interface User {
   id: number;
+  handle: string;
   email: string;
   nickname: string;
   gender: "male" | "female";
   avatar_url: string | null;
   is_admin: boolean;
+  show_hosted_events: boolean;
+}
+
+export interface PublicProfile {
+  id: number;
+  handle: string;
+  nickname: string;
+  gender: "male" | "female";
+  avatar_url: string | null;
+  hosted_events?: Pick<Event, "id" | "script" | "scheduled_at" | "location" | "status">[];
 }
 
 export interface Script {
@@ -34,7 +45,7 @@ export interface Event {
     difficulty_label: string;
     genres: string[];
   };
-  host: { id: number; nickname: string };
+  host: { id: number; handle: string; nickname: string };
   allow_cross_gender: boolean;
   offline_male: number;
   offline_female: number;
@@ -57,7 +68,7 @@ export interface AuditLogEntry {
 
 export interface EventMember {
   id: number;
-  user: { id: number; nickname: string; gender: "male" | "female" };
+  user: { id: number; handle: string; nickname: string; gender: "male" | "female" };
   status:
     | "pending"
     | "confirmed"

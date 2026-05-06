@@ -76,7 +76,7 @@ export default function CreateEventPage() {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">建立揪團</h1>
       <form
         onSubmit={handleSubmit}
-        className="bg-white border border-gray-200 rounded-lg p-6 space-y-4"
+        className="bg-surface border border-gray-200 rounded-lg p-6 space-y-4"
       >
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -107,7 +107,7 @@ export default function CreateEventPage() {
               ].map(({ label, value }) => (
                 <div
                   key={label}
-                  className="bg-white rounded border border-gray-200 py-2"
+                  className="bg-surface rounded border border-gray-200 py-2"
                 >
                   <div className="text-gray-400 mb-0.5">{label}</div>
                   <div className="font-semibold text-gray-900">{value}</div>

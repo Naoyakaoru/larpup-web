@@ -19,7 +19,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Desktop / Tablet Navbar */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <nav className="bg-surface border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link to="/"><Logo className="h-8 w-auto" /></Link>
@@ -56,7 +56,7 @@ export default function Layout() {
 
       {/* Mobile Bottom Tab Bar */}
       {user && (
-        <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-gray-200 z-40">
           <div className="flex items-center justify-around h-16">
             <NavLink to="/" end className={navLinkClass}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
