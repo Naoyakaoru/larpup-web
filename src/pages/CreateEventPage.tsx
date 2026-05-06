@@ -1,12 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getScripts } from '../api/scripts'
 import { createEvent } from '../api/events'
 import type { Script } from '../types'
 
 export default function CreateEventPage() {
   const [scripts, setScripts] = useState<Script[]>([])
-  const [form, setForm] = useState({ script_id: '', scheduled_at: '', location: '' })
+  const [searchParams] = useSearchParams()
+  const [form, setForm] = useState({ script_id: searchParams.get('script_id') ?? '', scheduled_at: '', location: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
