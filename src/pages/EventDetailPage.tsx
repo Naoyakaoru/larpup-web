@@ -5,6 +5,7 @@ import {
   joinEvent,
   leaveEvent,
   updateMember,
+  updateEvent,
   deleteEvent,
 } from "../api/events";
 import { useAuth } from "../contexts/AuthContext";
@@ -48,6 +49,8 @@ export default function EventDetailPage() {
   const [loading, setLoading] = useState(true);
   const [actionMsg, setActionMsg] = useState("");
   const [crossGender, setCrossGender] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ location: "", scheduled_at: "" });
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -84,6 +87,27 @@ export default function EventDetailPage() {
       navigate("/events");
     } catch (err) {
       setActionMsg(err instanceof Error ? err.message : "刪除失敗");
+    }
+  }
+
+  function startEdit() {
+    setEditForm({ location: event!.location, scheduled_at: event!.scheduled_at });
+    setEditing(true);
+  }
+
+  async function handleSaveEdit() {
+    try {
+      const hasOtherMembers = event!.members?.some(
+        (m) => m.user.id !== event!.host.id
+      );
+      const data: Partial<{ location: string; scheduled_at: string }> = {
+        location: editForm.location,
+      };
+      if (!hasOtherMembers) data.scheduled_at = editForm.scheduled_at;
+      setEvent(await updateEvent(Number(id), data));
+      setEditing(false);
+    } catch (err) {
+      setActionMsg(err instanceof Error ? err.message : "儲存失敗");
     }
   }
 
@@ -193,14 +217,49 @@ export default function EventDetailPage() {
 
         {actionMsg && <p className="mt-4 text-sm text-brand">{actionMsg}</p>}
 
-        {isHost && !(event.members && event.members.length > 0) && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <button
-              onClick={handleDelete}
-              className="text-sm text-red-500 hover:text-red-700"
-            >
-              刪除揪團
-            </button>
+        {isHost && (
+          <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+            {editing ? (
+              <>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">地點</label>
+                  <input value={editForm.location}
+                    onChange={e => setEditForm(f => ({ ...f, location: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                </div>
+                {!event.members?.some(m => m.user.id !== event.host.id) && (
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">時間</label>
+                    <input type="datetime-local" value={editForm.scheduled_at.slice(0, 16)}
+                      onChange={e => setEditForm(f => ({ ...f, scheduled_at: new Date(e.target.value).toISOString() }))}
+                      className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <button onClick={handleSaveEdit}
+                    className="text-sm bg-brand text-white px-3 py-1.5 rounded-md hover:bg-brand-hover">
+                    儲存
+                  </button>
+                  <button onClick={() => setEditing(false)}
+                    className="text-sm text-gray-500 hover:text-gray-700">
+                    取消
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex gap-3">
+                <button onClick={startEdit}
+                  className="text-sm text-gray-600 hover:text-gray-900">
+                  編輯
+                </button>
+                {!event.members?.some(m => m.user.id !== event.host.id) && (
+                  <button onClick={handleDelete}
+                    className="text-sm text-red-500 hover:text-red-700">
+                    刪除揪團
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
 
