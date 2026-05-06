@@ -64,6 +64,20 @@ export default function ProfilePage() {
             <h2 className="font-semibold text-gray-700 mb-3">我參加的活動</h2>
             <EventList events={joined} />
           </section>
+          {user?.is_admin && (
+            <section>
+              <h2 className="font-semibold text-gray-700 mb-3">管理員</h2>
+              <Link to="/admin/scripts/new"
+                className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-md hover:border-brand-light hover:shadow-sm transition-all">
+                <span className="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                  </svg>
+                </span>
+                <span className="text-sm font-medium text-gray-900">新增劇本</span>
+              </Link>
+            </section>
+          )}
         </div>
       )}
     </div>
