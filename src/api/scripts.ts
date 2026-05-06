@@ -12,3 +12,7 @@ export function getScripts(filters: { difficulty?: string; genre?: number } = {}
 export function getScript(id: number) {
   return request<Script>(`/scripts/${id}`)
 }
+
+export function createScript(data: FormData) {
+  return request<Script>('/scripts', { method: 'POST', body: data })
+}

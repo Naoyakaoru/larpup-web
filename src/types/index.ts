@@ -3,6 +3,7 @@ export interface User {
   email: string
   nickname: string
   avatar_url: string | null
+  is_admin: boolean
 }
 
 export interface Script {

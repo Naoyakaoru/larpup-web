@@ -29,6 +29,11 @@ export default function Layout() {
           <div className="flex items-center gap-3">
             {user ? (
               <>
+                {user.is_admin && (
+                  <Link to="/admin/scripts/new" className="hidden sm:block text-sm text-accent hover:text-purple-700 font-medium">
+                    + 劇本
+                  </Link>
+                )}
                 <Link to="/events/new" className="hidden sm:block text-sm bg-brand text-white px-3 py-1.5 rounded-md hover:bg-brand-hover">
                   揪團
                 </Link>

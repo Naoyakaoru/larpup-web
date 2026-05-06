@@ -10,6 +10,8 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ProfilePage from './pages/ProfilePage'
 import MessagesPage from './pages/MessagesPage'
+import AdminRoute from './components/AdminRoute'
+import CreateScriptPage from './pages/admin/CreateScriptPage'
 
 const router = createBrowserRouter([
   {
@@ -26,6 +28,12 @@ const router = createBrowserRouter([
         children: [
           { path: 'events/new', element: <CreateEventPage /> },
           { path: 'me', element: <ProfilePage /> },
+        ],
+      },
+      {
+        element: <AdminRoute />,
+        children: [
+          { path: 'admin/scripts/new', element: <CreateScriptPage /> },
         ],
       },
     ],
