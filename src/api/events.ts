@@ -38,7 +38,7 @@ export function createEvent(data: {
 
 export function updateEvent(
   id: number,
-  data: Partial<{ scheduled_at: string; location: string; status: string }>,
+  data: Partial<{ scheduled_at: string; location: string; status: string; offline_male: number; offline_female: number }>,
 ) {
   return request<Event>(`/events/${id}`, {
     method: "PATCH",
@@ -61,6 +61,10 @@ export function leaveEvent(id: number) {
 
 export function deleteEvent(id: number) {
   return request<{ message: string }>(`/events/${id}`, { method: "DELETE" });
+}
+
+export function restoreEvent(id: number) {
+  return request<Event>(`/events/${id}/restore`, { method: "PATCH" });
 }
 
 export function updateMember(

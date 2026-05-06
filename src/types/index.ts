@@ -45,6 +45,7 @@ export interface Event {
   available_slots: number;
   members?: EventMember[];
   audit_logs?: AuditLogEntry[];
+  deleted_at: string | null;
 }
 
 export interface AuditLogEntry {
@@ -64,6 +65,11 @@ export interface EventMember {
     | "cancelled"
     | "leave_requested";
   cross_gender: boolean;
+  applied_at: string;
+  confirmed_at: string | null;
+  rejected_at: string | null;
+  leave_requested_at: string | null;
+  cancelled_at: string | null;
 }
 
 export interface AuthResponse {

@@ -7,6 +7,7 @@ import {
   updateMember,
   updateEvent,
   deleteEvent,
+  restoreEvent,
 } from "../api/events";
 import { useAuth } from "../contexts/AuthContext";
 import type { Event, EventMember } from "../types";
@@ -50,7 +51,7 @@ export default function EventDetailPage() {
   const [actionMsg, setActionMsg] = useState("");
   const [crossGender, setCrossGender] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ location: "", scheduled_at: "" });
+  const [editForm, setEditForm] = useState({ location: "", scheduled_at: "", offline_male: 0, offline_female: 0 });
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -84,14 +85,22 @@ export default function EventDetailPage() {
     if (!confirm("確定要刪除這個揪團嗎？")) return;
     try {
       await deleteEvent(Number(id));
-      navigate("/events");
+      setEvent(await getEvent(Number(id)));
     } catch (err) {
       setActionMsg(err instanceof Error ? err.message : "刪除失敗");
     }
   }
 
+  async function handleRestore() {
+    try {
+      setEvent(await restoreEvent(Number(id)));
+    } catch (err) {
+      setActionMsg(err instanceof Error ? err.message : "復原失敗");
+    }
+  }
+
   function startEdit() {
-    setEditForm({ location: event!.location, scheduled_at: event!.scheduled_at });
+    setEditForm({ location: event!.location, scheduled_at: event!.scheduled_at, offline_male: event!.offline_male, offline_female: event!.offline_female });
     setEditing(true);
   }
 
@@ -100,8 +109,10 @@ export default function EventDetailPage() {
       const hasOtherMembers = event!.members?.some(
         (m) => m.user.id !== event!.host.id
       );
-      const data: Partial<{ location: string; scheduled_at: string }> = {
+      const data: Partial<{ location: string; scheduled_at: string; offline_male: number; offline_female: number }> = {
         location: editForm.location,
+        offline_male: editForm.offline_male,
+        offline_female: editForm.offline_female,
       };
       if (!hasOtherMembers) data.scheduled_at = editForm.scheduled_at;
       setEvent(await updateEvent(Number(id), data));
@@ -164,6 +175,15 @@ export default function EventDetailPage() {
       >
         ← 返回
       </button>
+
+      {event.deleted_at && isHost && (
+        <div className="mb-4 flex items-center justify-between bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+          <span className="text-sm text-red-600">此揪團已刪除</span>
+          <button onClick={handleRestore} className="text-sm text-red-600 font-medium hover:text-red-800 underline">
+            取消刪除
+          </button>
+        </div>
+      )}
 
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-4">
         <div className="flex items-start justify-between mb-4">
@@ -235,6 +255,21 @@ export default function EventDetailPage() {
                       className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
                   </div>
                 )}
+                <div>
+                  <p className="text-xs text-gray-500 mb-1.5">線下已確定朋友</p>
+                  {([["offline_male", "男"] , ["offline_female", "女"]] as const).map(([field, label]) => (
+                    <div key={field} className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-gray-500">{label}生</span>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => setEditForm(f => ({ ...f, [field]: Math.max(0, f[field] - 1) }))}
+                          className="w-6 h-6 rounded-full border border-gray-300 text-gray-600 text-sm flex items-center justify-center hover:border-brand hover:text-brand">−</button>
+                        <span className="text-sm font-medium w-4 text-center">{editForm[field]}</span>
+                        <button type="button" onClick={() => setEditForm(f => ({ ...f, [field]: f[field] + 1 }))}
+                          className="w-6 h-6 rounded-full border border-gray-300 text-gray-600 text-sm flex items-center justify-center hover:border-brand hover:text-brand">+</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
                 <div className="flex gap-2">
                   <button onClick={handleSaveEdit}
                     className="text-sm bg-brand text-white px-3 py-1.5 rounded-md hover:bg-brand-hover">
@@ -318,54 +353,41 @@ export default function EventDetailPage() {
               const showName =
                 isHost || m.user.id === user?.id || m.status !== "pending";
               return (
-                <div
-                  key={m.id}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span
-                    className={
-                      showName ? "text-gray-700" : "text-gray-400 italic"
-                    }
-                  >
-                    {showName ? m.user.nickname : "匿名"}
-                    {m.user.id === event.host.id && (
-                      <span className="ml-1.5 text-xs text-brand-hover bg-brand-light/40 px-1.5 py-0.5 rounded">
-                        主揪
+                <div key={m.id} className="py-1.5 border-b border-gray-50 last:border-0">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={showName ? "text-gray-700 font-medium" : "text-gray-400 italic"}>
+                        {showName ? m.user.nickname : "匿名"}
                       </span>
-                    )}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {m.cross_gender && (
-                      <span className="text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded">
-                        反串
+                      {m.user.id === event.host.id && (
+                        <span className="text-xs text-brand-hover bg-brand-light/40 px-1.5 py-0.5 rounded">主揪</span>
+                      )}
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${m.user.gender === "male" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"}`}>
+                        {m.user.gender === "male" ? "男" : "女"}
                       </span>
+                      {m.cross_gender && (
+                        <span className="text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded">反串</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-gray-400 text-xs">{MEMBER_STATUS_LABELS[m.status]}</span>
+                      {isHost && m.status === "pending" && (
+                        <>
+                          <button onClick={() => handleMemberUpdate(m.id, "confirmed")} className="text-green-600 hover:text-green-800 text-xs">確認</button>
+                          <button onClick={() => handleMemberUpdate(m.id, "rejected")} className="text-red-500 hover:text-red-700 text-xs">拒絕</button>
+                        </>
+                      )}
+                      {isHost && m.status === "leave_requested" && (
+                        <button onClick={() => handleMemberUpdate(m.id, "cancelled")} className="text-orange-500 hover:text-orange-700 text-xs">同意退出</button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mt-0.5 text-xs text-gray-400">
+                    {isHost && (
+                      <span>申請 {new Date(m.applied_at).toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}</span>
                     )}
-                    <span className="text-gray-400">
-                      {MEMBER_STATUS_LABELS[m.status]}
-                    </span>
-                    {isHost && m.status === "pending" && (
-                      <>
-                        <button
-                          onClick={() => handleMemberUpdate(m.id, "confirmed")}
-                          className="text-green-600 hover:text-green-800"
-                        >
-                          確認
-                        </button>
-                        <button
-                          onClick={() => handleMemberUpdate(m.id, "rejected")}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          拒絕
-                        </button>
-                      </>
-                    )}
-                    {isHost && m.status === "leave_requested" && (
-                      <button
-                        onClick={() => handleMemberUpdate(m.id, "cancelled")}
-                        className="text-orange-500 hover:text-orange-700"
-                      >
-                        同意退出
-                      </button>
+                    {m.confirmed_at && (
+                      <span>確認 {new Date(m.confirmed_at).toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}</span>
                     )}
                   </div>
                 </div>
