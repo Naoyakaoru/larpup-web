@@ -12,6 +12,7 @@ export default function CreateEventPage() {
     scheduled_at: '',
     location: '',
     host_in_game: false,
+    allow_cross_gender: false,
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -38,6 +39,7 @@ export default function CreateEventPage() {
         scheduled_at: new Date(form.scheduled_at).toISOString(),
         location: form.location,
         host_in_game: form.host_in_game,
+        allow_cross_gender: form.allow_cross_gender,
       })
       navigate(`/events/${event.id}`)
     } catch (err) {
@@ -80,6 +82,11 @@ export default function CreateEventPage() {
               <input type="checkbox" checked={form.host_in_game} onChange={set('host_in_game')}
                 className="w-4 h-4 accent-brand rounded" />
               <span className="text-sm text-gray-700">主揪也要上車（佔一個名額）</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.allow_cross_gender} onChange={set('allow_cross_gender')}
+                className="w-4 h-4 accent-brand rounded" />
+              <span className="text-sm text-gray-700">開放反串</span>
             </label>
             <p className="text-xs text-gray-400">
               實際招募人數：{selectedScript.total_slots - (form.host_in_game ? 1 : 0)} 人

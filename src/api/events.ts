@@ -34,8 +34,11 @@ export function updateEvent(id: number, data: Partial<{ scheduled_at: string; lo
   })
 }
 
-export function joinEvent(id: number) {
-  return request<{ message: string }>(`/events/${id}/join`, { method: 'POST' })
+export function joinEvent(id: number, crossGender = false) {
+  return request<{ message: string }>(`/events/${id}/join`, {
+    method: 'POST',
+    body: JSON.stringify({ cross_gender: crossGender }),
+  })
 }
 
 export function leaveEvent(id: number) {

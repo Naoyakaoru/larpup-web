@@ -25,6 +25,7 @@ export default function EventDetailPage() {
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionMsg, setActionMsg] = useState('')
+  const [crossGender, setCrossGender] = useState(false)
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -34,7 +35,7 @@ export default function EventDetailPage() {
 
   async function handleJoin() {
     try {
-      const res = await joinEvent(Number(id))
+      const res = await joinEvent(Number(id), crossGender)
       setActionMsg(res.message)
       setEvent(await getEvent(Number(id)))
     } catch (err) {
@@ -90,10 +91,19 @@ export default function EventDetailPage() {
         {user && !isHost && (
           <div className="mt-4 pt-4 border-t border-gray-100">
             {!myMember && (
-              <button onClick={handleJoin} disabled={event.status === 'full' || event.status === 'cancelled'}
-                className="bg-brand text-white text-sm px-4 py-2 rounded-md hover:bg-brand-hover disabled:opacity-50">
-                申請加入
-              </button>
+              <div className="space-y-3">
+                {event.allow_cross_gender && (
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={crossGender} onChange={e => setCrossGender(e.target.checked)}
+                      className="w-4 h-4 accent-brand rounded" />
+                    <span className="text-sm text-gray-700">我要反串</span>
+                  </label>
+                )}
+                <button onClick={handleJoin} disabled={event.status === 'full' || event.status === 'cancelled'}
+                  className="bg-brand text-white text-sm px-4 py-2 rounded-md hover:bg-brand-hover disabled:opacity-50">
+                  申請加入
+                </button>
+              </div>
             )}
             {myMember && (
               <div className="flex items-center gap-3">
@@ -115,6 +125,7 @@ export default function EventDetailPage() {
               <div key={m.id} className="flex items-center justify-between text-sm">
                 <span className="text-gray-700">{m.user.nickname}</span>
                 <div className="flex items-center gap-2">
+                  {m.cross_gender && <span className="text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded">反串</span>}
                   <span className="text-gray-400">{MEMBER_STATUS_LABELS[m.status]}</span>
                   {isHost && m.status === 'pending' && (
                     <>
