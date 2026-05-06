@@ -2,6 +2,7 @@ export interface User {
   id: number
   email: string
   nickname: string
+  gender: 'male' | 'female' | 'other'
   avatar_url: string | null
   is_admin: boolean
 }
@@ -21,8 +22,9 @@ export interface Script {
 
 export interface Event {
   id: number
-  script: { id: number; title: string; total_slots: number }
+  script: { id: number; title: string; total_slots: number; male_slots: number; female_slots: number; any_slots: number }
   host: { id: number; nickname: string }
+  host_in_game: boolean
   scheduled_at: string
   location: string
   status: 'recruiting' | 'full' | 'completed' | 'cancelled'

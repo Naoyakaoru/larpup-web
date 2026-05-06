@@ -1,10 +1,10 @@
 import { request } from './client'
 import type { AuthResponse } from '../types'
 
-export function register(email: string, password: string, passwordConfirmation: string, nickname: string) {
+export function register(email: string, password: string, passwordConfirmation: string, nickname: string, gender: string) {
   return request<AuthResponse>('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ email, password, password_confirmation: passwordConfirmation, nickname }),
+    body: JSON.stringify({ email, password, password_confirmation: passwordConfirmation, nickname, gender }),
   })
 }
 

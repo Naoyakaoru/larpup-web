@@ -7,7 +7,12 @@ import type { Script } from '../types'
 export default function CreateEventPage() {
   const [scripts, setScripts] = useState<Script[]>([])
   const [searchParams] = useSearchParams()
-  const [form, setForm] = useState({ script_id: searchParams.get('script_id') ?? '', scheduled_at: '', location: '' })
+  const [form, setForm] = useState({
+    script_id: searchParams.get('script_id') ?? '',
+    scheduled_at: '',
+    location: '',
+    host_in_game: false,
+  })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
@@ -16,9 +21,11 @@ export default function CreateEventPage() {
     getScripts().then(setScripts)
   }, [])
 
+  const selectedScript = scripts.find(s => String(s.id) === form.script_id) ?? null
+
   function set(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-      setForm(f => ({ ...f, [field]: e.target.value }))
+      setForm(f => ({ ...f, [field]: e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value }))
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -30,6 +37,7 @@ export default function CreateEventPage() {
         script_id: Number(form.script_id),
         scheduled_at: new Date(form.scheduled_at).toISOString(),
         location: form.location,
+        host_in_game: form.host_in_game,
       })
       navigate(`/events/${event.id}`)
     } catch (err) {
@@ -49,25 +57,48 @@ export default function CreateEventPage() {
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
             <option value="">請選擇劇本</option>
             {scripts.map(s => (
-              <option key={s.id} value={s.id}>
-                {s.title}（{s.total_slots} 人）
-              </option>
+              <option key={s.id} value={s.id}>{s.title}（{s.total_slots} 人）</option>
             ))}
           </select>
         </div>
+
+        {selectedScript && (
+          <div className="bg-gray-50 rounded-md p-3 space-y-3">
+            <div className="grid grid-cols-3 gap-2 text-center text-xs">
+              {[
+                { label: '男', value: selectedScript.male_slots },
+                { label: '女', value: selectedScript.female_slots },
+                { label: '不限', value: selectedScript.any_slots },
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-white rounded border border-gray-200 py-2">
+                  <div className="text-gray-400 mb-0.5">{label}</div>
+                  <div className="font-semibold text-gray-900">{value}</div>
+                </div>
+              ))}
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.host_in_game} onChange={set('host_in_game')}
+                className="w-4 h-4 accent-brand rounded" />
+              <span className="text-sm text-gray-700">主揪也要上車（佔一個名額）</span>
+            </label>
+            <p className="text-xs text-gray-400">
+              實際招募人數：{selectedScript.total_slots - (form.host_in_game ? 1 : 0)} 人
+            </p>
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">活動時間</label>
           <input type="datetime-local" value={form.scheduled_at} onChange={set('scheduled_at')} required
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-          />
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">地點</label>
           <input type="text" value={form.location} onChange={set('location')} required
             placeholder="例：台北市信義區 / 謎境劇本殺台北店"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-          />
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
         </div>
+
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button type="submit" disabled={loading}
           className="w-full bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-hover disabled:opacity-50">
