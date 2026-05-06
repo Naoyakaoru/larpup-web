@@ -1,53 +1,78 @@
-import { request } from './client'
-import type { Event } from '../types'
+import { request } from "./client";
+import type { Event } from "../types";
 
 interface EventFilters {
-  status?: string
-  script_id?: number
-  date?: string
+  status?: string;
+  script_id?: number;
+  date?: string;
 }
 
 export function getEvents(filters: EventFilters = {}) {
-  const params = new URLSearchParams()
-  if (filters.status) params.set('status', filters.status)
-  if (filters.script_id) params.set('script_id', String(filters.script_id))
-  if (filters.date) params.set('date', filters.date)
-  const qs = params.toString()
-  return request<Event[]>(`/events${qs ? `?${qs}` : ''}`)
+  const params = new URLSearchParams();
+  if (filters.status) params.set("status", filters.status);
+  if (filters.script_id) params.set("script_id", String(filters.script_id));
+  if (filters.date) params.set("date", filters.date);
+  const qs = params.toString();
+  return request<Event[]>(`/events${qs ? `?${qs}` : ""}`);
 }
 
 export function getEvent(id: number) {
-  return request<Event>(`/events/${id}`)
+  return request<Event>(`/events/${id}`);
 }
 
-export function createEvent(data: { script_id: number; scheduled_at: string; location: string; host_in_game: boolean; host_cross_gender: boolean; allow_cross_gender: boolean; offline_male: number; offline_female: number }) {
-  return request<Event>('/events', {
-    method: 'POST',
+export function createEvent(data: {
+  script_id: number;
+  scheduled_at: string;
+  location: string;
+  host_in_game: boolean;
+  host_cross_gender: boolean;
+  allow_cross_gender: boolean;
+  offline_male: number;
+  offline_female: number;
+}) {
+  return request<Event>("/events", {
+    method: "POST",
     body: JSON.stringify(data),
-  })
+  });
 }
 
-export function updateEvent(id: number, data: Partial<{ scheduled_at: string; location: string; status: string }>) {
+export function updateEvent(
+  id: number,
+  data: Partial<{ scheduled_at: string; location: string; status: string }>,
+) {
   return request<Event>(`/events/${id}`, {
-    method: 'PATCH',
+    method: "PATCH",
     body: JSON.stringify(data),
-  })
+  });
 }
 
 export function joinEvent(id: number, crossGender = false) {
   return request<{ message: string }>(`/events/${id}/join`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({ cross_gender: crossGender }),
-  })
+  });
 }
 
 export function leaveEvent(id: number) {
-  return request<{ message: string }>(`/events/${id}/leave`, { method: 'DELETE' })
+  return request<{ message: string }>(`/events/${id}/leave`, {
+    method: "DELETE",
+  });
 }
 
-export function updateMember(eventId: number, memberId: number, status: string) {
-  return request<{ id: number; status: string }>(`/events/${eventId}/members/${memberId}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ status }),
-  })
+export function deleteEvent(id: number) {
+  return request<{ message: string }>(`/events/${id}`, { method: "DELETE" });
+}
+
+export function updateMember(
+  eventId: number,
+  memberId: number,
+  status: string,
+) {
+  return request<{ id: number; status: string }>(
+    `/events/${eventId}/members/${memberId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    },
+  );
 }
