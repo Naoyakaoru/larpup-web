@@ -67,6 +67,10 @@ export function restoreEvent(id: number) {
   return request<Event>(`/events/${id}/restore`, { method: "PATCH" });
 }
 
+export function cancelEvent(id: number) {
+  return request<Event>(`/events/${id}/cancel`, { method: "PATCH" });
+}
+
 export function updateMember(
   eventId: number,
   memberId: number,

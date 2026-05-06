@@ -10,6 +10,7 @@ import {
   updateEvent,
   deleteEvent,
   restoreEvent,
+  cancelEvent,
 } from "../api/events";
 import { useAuth } from "../contexts/AuthContext";
 import type { Event, EventMember } from "../types";
@@ -91,6 +92,15 @@ export default function EventDetailPage() {
       setEvent(await getEvent(Number(id)));
     } catch (err) {
       setActionMsg(err instanceof Error ? err.message : "刪除失敗");
+    }
+  }
+
+  async function handleCancel() {
+    if (!confirm("確定要取消這個揪團嗎？已報名的成員將無法繼續參加。")) return;
+    try {
+      setEvent(await cancelEvent(Number(id)));
+    } catch (err) {
+      setActionMsg(err instanceof Error ? err.message : "取消失敗");
     }
   }
 
@@ -305,6 +315,12 @@ export default function EventDetailPage() {
                   className="text-sm text-gray-600 hover:text-gray-900">
                   編輯
                 </button>
+                {event.status !== "cancelled" && event.status !== "completed" && (
+                  <button onClick={handleCancel}
+                    className="text-sm text-orange-500 hover:text-orange-700">
+                    取消揪團
+                  </button>
+                )}
                 {!event.members?.some(m => m.user.id !== event.host.id) && (
                   <button onClick={handleDelete}
                     className="text-sm text-red-500 hover:text-red-700">

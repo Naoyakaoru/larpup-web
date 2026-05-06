@@ -63,9 +63,9 @@ export default function ScriptsPage() {
               </div>
               <div className="text-xs text-gray-400">
                 {[
-                  script.male_slots ? `男 ${script.male_slots}` : '',
-                  script.female_slots ? `女 ${script.female_slots}` : '',
-                  script.any_slots ? `不限 ${script.any_slots}` : '',
+                  script.male_slots ? `${script.male_slots}男` : '',
+                  script.female_slots ? `${script.female_slots}女` : '',
+                  script.any_slots ? `${script.any_slots}不限` : '',
                 ].filter(Boolean).join('・')}・共 {script.total_slots} 人
               </div>
               {script.description && (
