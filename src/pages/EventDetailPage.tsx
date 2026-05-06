@@ -78,7 +78,7 @@ export default function EventDetailPage() {
             {STATUS_LABELS[event.status]}
           </span>
         </div>
-        <dl className="grid grid-cols-2 gap-3 text-sm">
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div><dt className="text-gray-400">時間</dt><dd className="text-gray-900">{formatDate(event.scheduled_at)}</dd></div>
           <div><dt className="text-gray-400">地點</dt><dd className="text-gray-900">{event.location}</dd></div>
           <div><dt className="text-gray-400">主辦</dt><dd className="text-gray-900">{event.host.nickname}</dd></div>

@@ -34,11 +34,11 @@ export default function ProfilePage() {
         {events.map(e => (
           <Link key={e.id} to={`/events/${e.id}`}
             className="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors">
-            <div>
-              <div className="text-sm font-medium text-gray-900">{e.script.title}</div>
-              <div className="text-xs text-gray-400">{formatDate(e.scheduled_at)}・{e.location}</div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium text-gray-900 truncate">{e.script.title}</div>
+              <div className="text-xs text-gray-400 truncate">{formatDate(e.scheduled_at)}・{e.location}</div>
             </div>
-            <span className="text-xs text-gray-500">{STATUS_LABELS[e.status]}</span>
+            <span className="text-xs text-gray-500 ml-2 shrink-0">{STATUS_LABELS[e.status]}</span>
           </Link>
         ))}
       </div>

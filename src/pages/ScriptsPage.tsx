@@ -23,9 +23,9 @@ export default function ScriptsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
         <h1 className="text-2xl font-bold text-gray-900">劇本</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 shrink-0">
           {(['', 'easy', 'medium', 'hard'] as const).map(d => (
             <button key={d} onClick={() => setDifficulty(d)}
               className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
