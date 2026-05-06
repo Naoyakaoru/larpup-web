@@ -9,6 +9,7 @@ import ScriptsPage from './pages/ScriptsPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ProfilePage from './pages/ProfilePage'
+import MessagesPage from './pages/MessagesPage'
 
 const router = createBrowserRouter([
   {
@@ -17,6 +18,7 @@ const router = createBrowserRouter([
       { index: true, element: <EventsPage /> },
       { path: 'events/:id', element: <EventDetailPage /> },
       { path: 'scripts', element: <ScriptsPage /> },
+      { path: 'messages', element: <MessagesPage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       {
