@@ -1,0 +1,50 @@
+import { request } from './client'
+import type { Event } from '../types'
+
+interface EventFilters {
+  status?: string
+  script_id?: number
+  date?: string
+}
+
+export function getEvents(filters: EventFilters = {}) {
+  const params = new URLSearchParams()
+  if (filters.status) params.set('status', filters.status)
+  if (filters.script_id) params.set('script_id', String(filters.script_id))
+  if (filters.date) params.set('date', filters.date)
+  const qs = params.toString()
+  return request<Event[]>(`/events${qs ? `?${qs}` : ''}`)
+}
+
+export function getEvent(id: number) {
+  return request<Event>(`/events/${id}`)
+}
+
+export function createEvent(data: { script_id: number; scheduled_at: string; location: string }) {
+  return request<Event>('/events', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export function updateEvent(id: number, data: Partial<{ scheduled_at: string; location: string; status: string }>) {
+  return request<Event>(`/events/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export function joinEvent(id: number) {
+  return request<{ message: string }>(`/events/${id}/join`, { method: 'POST' })
+}
+
+export function leaveEvent(id: number) {
+  return request<{ message: string }>(`/events/${id}/leave`, { method: 'DELETE' })
+}
+
+export function updateMember(eventId: number, memberId: number, status: string) {
+  return request<{ id: number; status: string }>(`/events/${eventId}/members/${memberId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  })
+}
