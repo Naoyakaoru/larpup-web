@@ -315,6 +315,32 @@ export default function EventDetailPage() {
           </div>
         </div>
       )}
+
+      {event.audit_logs && event.audit_logs.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="font-semibold text-gray-900 mb-3">變更紀錄</h2>
+          <div className="space-y-2">
+            {event.audit_logs.map((log, i) => (
+              <div key={i} className="flex items-start justify-between text-sm">
+                <span className="text-gray-600">
+                  {log.action === "location_changed" && (
+                    <>
+                      <span className="font-medium">{log.user.nickname}</span>
+                      {" 更改地點："}
+                      <span className="line-through text-gray-400">{log.metadata.from}</span>
+                      {" → "}
+                      <span>{log.metadata.to}</span>
+                    </>
+                  )}
+                </span>
+                <span className="text-xs text-gray-400 shrink-0 ml-3">
+                  {new Date(log.created_at).toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

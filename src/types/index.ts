@@ -44,6 +44,14 @@ export interface Event {
   confirmed_count: number;
   available_slots: number;
   members?: EventMember[];
+  audit_logs?: AuditLogEntry[];
+}
+
+export interface AuditLogEntry {
+  action: string;
+  metadata: Record<string, string>;
+  user: { id: number; nickname: string };
+  created_at: string;
 }
 
 export interface EventMember {

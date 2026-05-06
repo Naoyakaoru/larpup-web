@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getMyEvents } from '../api/users'
+import { getMyEvents, updateMe } from '../api/users'
 import { useAuth } from '../contexts/AuthContext'
 import type { Event } from '../types'
 
@@ -15,10 +15,13 @@ function formatDate(iso: string) {
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth()
+  const { user, login } = useAuth()
   const [hosted, setHosted] = useState<Event[]>([])
   const [joined, setJoined] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState({ nickname: '', password: '', passwordConfirmation: '' })
+  const [saveMsg, setSaveMsg] = useState('')
 
   useEffect(() => {
     getMyEvents().then(res => {
@@ -26,6 +29,28 @@ export default function ProfilePage() {
       setJoined(res.joined)
     }).finally(() => setLoading(false))
   }, [])
+
+  function startEdit() {
+    setForm({ nickname: user?.nickname ?? '', password: '', passwordConfirmation: '' })
+    setEditing(true)
+    setSaveMsg('')
+  }
+
+  async function handleSave() {
+    try {
+      const data: Record<string, string> = { nickname: form.nickname }
+      if (form.password) {
+        data.password = form.password
+        data.password_confirmation = form.passwordConfirmation
+      }
+      const updated = await updateMe(data)
+      login(localStorage.getItem('larpup_token')!, updated)
+      setEditing(false)
+      setSaveMsg('已儲存')
+    } catch (err) {
+      setSaveMsg(err instanceof Error ? err.message : '儲存失敗')
+    }
+  }
 
   function EventList({ events }: { events: Event[] }) {
     if (events.length === 0) return <p className="text-sm text-gray-400">沒有活動</p>
@@ -48,8 +73,41 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl">
       <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <h1 className="text-xl font-bold text-gray-900 mb-1">{user?.nickname}</h1>
-        <p className="text-sm text-gray-400">{user?.email}</p>
+        {editing ? (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">暱稱</label>
+              <input value={form.nickname} onChange={e => setForm(f => ({ ...f, nickname: e.target.value }))}
+                className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">新密碼（不改請留空）</label>
+              <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+            </div>
+            {form.password && (
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">確認新密碼</label>
+                <input type="password" value={form.passwordConfirmation} onChange={e => setForm(f => ({ ...f, passwordConfirmation: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+              </div>
+            )}
+            {saveMsg && <p className="text-sm text-red-500">{saveMsg}</p>}
+            <div className="flex gap-2 pt-1">
+              <button onClick={handleSave} className="text-sm bg-brand text-white px-3 py-1.5 rounded-md hover:bg-brand-hover">儲存</button>
+              <button onClick={() => setEditing(false)} className="text-sm text-gray-500 hover:text-gray-700">取消</button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 mb-1">{user?.nickname}</h1>
+              <p className="text-sm text-gray-400">{user?.email}</p>
+              {saveMsg && <p className="text-xs text-green-600 mt-1">{saveMsg}</p>}
+            </div>
+            <button onClick={startEdit} className="text-sm text-gray-400 hover:text-gray-600">編輯</button>
+          </div>
+        )}
       </div>
 
       {loading ? (
