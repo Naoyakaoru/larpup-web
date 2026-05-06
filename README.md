@@ -1,73 +1,46 @@
-# React + TypeScript + Vite
+# LarpUp Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+LarpUp 劇本殺揪團平台的 Web 前端。
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19 + TypeScript
+- Vite 8
+- Tailwind CSS v4
+- React Router v7
 
-## React Compiler
+## 快速開始
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+開發 server 跑在 `http://localhost:5173`，API 請求會 proxy 到 `http://localhost:3000`。
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+> 需要同時跑 [larpup-api](https://github.com/Naoyakaoru/larpup-api)。
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 功能頁面
+
+| 路徑 | 功能 |
+|------|------|
+| `/` | 揪團活動列表 |
+| `/events/:id` | 活動詳情、報名、成員審核 |
+| `/events/new` | 建立揪團（需登入）|
+| `/scripts` | 劇本列表 |
+| `/me` | 個人頁面 |
+| `/login` | 登入 |
+| `/register` | 註冊 |
+
+## 色系
+
+- 主色（暖橘）：`#F59E0B`
+- 次色（奶油黃）：`#FDE68A`
+- 輔色（柔紫）：`#A78BFA`
+- 背景（淡米橘）：`#FFF7ED`
+
+深色模式使用方案 B 靛紫系配色。
+
+## 部署
+
+部署至 Vercel，連接 GitHub 倉庫自動 deploy。
