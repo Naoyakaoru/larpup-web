@@ -29,27 +29,33 @@ let mockEvent: Event;
 
 const HOST: User = {
   id: 10,
+  handle: "host",
   email: "host@x.com",
   nickname: "Host",
   gender: "male",
   avatar_url: null,
   is_admin: false,
+  show_hosted_events: false,
 };
 const MEMBER_A: User = {
   id: 20,
+  handle: "alice",
   email: "a@x.com",
   nickname: "Alice",
   gender: "female",
   avatar_url: null,
   is_admin: false,
+  show_hosted_events: false,
 };
 const MEMBER_B: User = {
   id: 30,
+  handle: "bob",
   email: "b@x.com",
   nickname: "Bob",
   gender: "male",
   avatar_url: null,
   is_admin: false,
+  show_hosted_events: false,
 };
 
 function makeMember(
@@ -59,7 +65,12 @@ function makeMember(
 ): EventMember {
   return {
     id: user.id * 100,
-    user: { id: user.id, nickname: user.nickname, gender: user.gender },
+    user: {
+      id: user.id,
+      handle: user.handle,
+      nickname: user.nickname,
+      gender: user.gender,
+    },
     status,
     cross_gender: false,
     applied_at: appliedAt,
@@ -84,7 +95,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
       difficulty_label: "進階",
       genres: ["推理"],
     },
-    host: { id: HOST.id, nickname: HOST.nickname },
+    host: { id: HOST.id, handle: HOST.handle, nickname: HOST.nickname },
     allow_cross_gender: false,
     offline_male: 0,
     offline_female: 0,
