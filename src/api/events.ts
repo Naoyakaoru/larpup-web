@@ -40,6 +40,7 @@ export function createEvent(data: CreateEventData) {
 export function updateEvent(
   id: number,
   data: Partial<{
+    script_version_id: number;
     scheduled_at: string;
     location: string;
     status: string;

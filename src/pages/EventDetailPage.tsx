@@ -12,6 +12,7 @@ import {
   restoreEvent,
   cancelEvent,
 } from "../api/events";
+import { getScriptVersions, type ScriptVersion } from "../api/scripts";
 import { useAuth } from "../contexts/AuthContext";
 import { calcRemainingAfterOnline, canAddOffline } from "../utils/slotCalc";
 import type { Event } from "../types";
@@ -48,6 +49,8 @@ export default function EventDetailPage() {
     allow_cross_gender: false,
   });
   const [editScheduledAt, setEditScheduledAt] = useState<Date | null>(null);
+  const [editVersions, setEditVersions] = useState<ScriptVersion[]>([]);
+  const [editScriptVersionId, setEditScriptVersionId] = useState<number | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -112,6 +115,14 @@ export default function EventDetailPage() {
       allow_cross_gender: event!.allow_cross_gender,
     });
     setEditScheduledAt(new Date(event!.scheduled_at));
+    setEditScriptVersionId(event!.script_version_id);
+    setEditVersions([]);
+    const hasOtherMembers = event!.members?.some(
+      (m) => m.user.id !== event!.host.id,
+    );
+    if (!hasOtherMembers) {
+      getScriptVersions(event!.script.id).then(setEditVersions);
+    }
     setEditing(true);
   }
 
@@ -121,6 +132,7 @@ export default function EventDetailPage() {
         (m) => m.user.id !== event!.host.id,
       );
       const data: Partial<{
+        script_version_id: number;
         location: string;
         scheduled_at: string;
         offline_male: number;
@@ -134,6 +146,12 @@ export default function EventDetailPage() {
       };
       if (!hasOtherMembers && editScheduledAt)
         data.scheduled_at = editScheduledAt.toISOString();
+      if (
+        !hasOtherMembers &&
+        editScriptVersionId !== null &&
+        editScriptVersionId !== event!.script_version_id
+      )
+        data.script_version_id = editScriptVersionId;
       setEvent(await updateEvent(Number(id), data));
       setEditing(false);
     } catch (err) {
@@ -299,32 +317,66 @@ export default function EventDetailPage() {
                   />
                 </div>
                 {!event.members?.some((m) => m.user.id !== event.host.id) && (
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">
-                      時間
-                    </label>
-                    <DatePicker
-                      selected={editScheduledAt}
-                      onChange={setEditScheduledAt}
-                      showTimeSelect
-                      timeIntervals={30}
-                      dateFormat="yyyy/MM/dd HH:mm"
-                      timeFormat="HH:mm"
-                      className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-                      wrapperClassName="w-full"
-                      onCalendarOpen={() => {
-                        setTimeout(() => {
-                          const list = document.querySelector(
-                            ".react-datepicker__time-list",
-                          );
-                          const items = list?.querySelectorAll(
-                            ".react-datepicker__time-list-item",
-                          );
-                          items?.[16]?.scrollIntoView({ block: "start" });
-                        }, 0);
-                      }}
-                    />
-                  </div>
+                  <>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">
+                        時間
+                      </label>
+                      <DatePicker
+                        selected={editScheduledAt}
+                        onChange={setEditScheduledAt}
+                        showTimeSelect
+                        timeIntervals={30}
+                        dateFormat="yyyy/MM/dd HH:mm"
+                        timeFormat="HH:mm"
+                        className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                        wrapperClassName="w-full"
+                        onCalendarOpen={() => {
+                          setTimeout(() => {
+                            const list = document.querySelector(
+                              ".react-datepicker__time-list",
+                            );
+                            const items = list?.querySelectorAll(
+                              ".react-datepicker__time-list-item",
+                            );
+                            items?.[16]?.scrollIntoView({ block: "start" });
+                          }, 0);
+                        }}
+                      />
+                    </div>
+                    {editVersions.length > 0 && (
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1.5">
+                          店家版本
+                        </p>
+                        <div className="space-y-1.5">
+                          {editVersions.map((v) => (
+                            <button
+                              key={v.id}
+                              type="button"
+                              onClick={() => setEditScriptVersionId(v.id)}
+                              className={`w-full text-left rounded-md border px-3 py-2 text-sm transition-colors ${
+                                editScriptVersionId === v.id
+                                  ? "border-brand bg-brand/5"
+                                  : "border-gray-200 hover:border-gray-300 bg-white"
+                              }`}
+                            >
+                              <div className="flex justify-between items-center gap-2">
+                                <span className="font-medium text-gray-900">
+                                  {v.store.name}
+                                </span>
+                                {v.version_name && (
+                                  <span className="text-xs text-gray-400 shrink-0">
+                                    {v.version_name}
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
                 <div>
                   <p className="text-xs text-gray-500 mb-1.5">線下已確定朋友</p>

@@ -52,6 +52,7 @@ export interface Event {
     version_name: string | null;
   };
   host: { id: number; handle: string; nickname: string };
+  script_version_id: number;
   allow_cross_gender: boolean;
   offline_male: number;
   offline_female: number;
