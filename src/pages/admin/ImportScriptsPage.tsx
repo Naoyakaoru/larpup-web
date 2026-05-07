@@ -10,20 +10,38 @@ import {
 // ── CSV parsing ────────────────────────────────────────────────────────────────
 
 function parseCSV(text: string): Record<string, string>[] {
-  const lines = text.split(/\r?\n/);
-  if (lines.length < 2) return [];
-  const headers = splitCSVRow(lines[0]);
-  const rows: Record<string, string>[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    const vals = splitCSVRow(line);
+  const allRows = splitCSVRows(text);
+  if (allRows.length < 2) return [];
+  const headers = allRows[0];
+  return allRows.slice(1).map((vals) => {
     const row: Record<string, string> = {};
     headers.forEach((h, j) => {
       row[h] = vals[j] ?? "";
     });
-    rows.push(row);
+    return row;
+  });
+}
+
+function splitCSVRows(text: string): string[][] {
+  const rows: string[][] = [];
+  let cur = "";
+  let inQuote = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      if (inQuote && text[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else inQuote = !inQuote;
+    } else if ((ch === "\r" || ch === "\n") && !inQuote) {
+      if (ch === "\r" && text[i + 1] === "\n") i++;
+      if (cur.trim() || rows.length > 0) rows.push(splitCSVRow(cur));
+      cur = "";
+    } else {
+      cur += ch;
+    }
   }
+  if (cur.trim()) rows.push(splitCSVRow(cur));
   return rows;
 }
 
@@ -95,7 +113,7 @@ function csvRowToRow(raw: Record<string, string>, key: number): Row {
     duration: raw["duration_hours"]
       ? parseInt(raw["duration_hours"], 10) || null
       : null,
-    description: raw["description"] || "",
+    description: (raw["description"] || "").replace(/\\n/g, "\n"),
     publisher: raw["publisher"] || null,
   };
 }
