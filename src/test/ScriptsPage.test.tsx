@@ -16,7 +16,6 @@ function makeScript(overrides: Partial<Script> = {}): Script {
     title: "月夜謀殺案",
     genres: ["推理"],
     difficulty: "medium",
-    difficulty_label: "進階",
     male_slots: 3,
     female_slots: 2,
     any_slots: 1,
@@ -103,7 +102,7 @@ describe("ScriptsPage – slot format", () => {
   });
 
   it("renders script title and difficulty label", async () => {
-    mockScripts = [makeScript({ title: "死亡列車", difficulty_label: "進階" })];
+    mockScripts = [makeScript({ title: "死亡列車" })];
     renderPage();
 
     expect(await screen.findByText("死亡列車")).toBeInTheDocument();

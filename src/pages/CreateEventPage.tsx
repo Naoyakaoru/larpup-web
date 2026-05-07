@@ -3,10 +3,15 @@ import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { getScripts, getScriptVersions, type ScriptVersion } from "../api/scripts";
+import {
+  getScripts,
+  getScriptVersions,
+  type ScriptVersion,
+} from "../api/scripts";
 import { createEvent } from "../api/events";
 import { useAuth } from "../contexts/AuthContext";
 import { calcNeeded, canAddOffline, formatNeeded } from "../utils/slotCalc";
+import { DIFFICULTY_LABELS } from "../utils/labels";
 import type { Script } from "../types";
 
 export default function CreateEventPage() {
@@ -33,7 +38,9 @@ export default function CreateEventPage() {
   // Version selection (only when accessing directly, not via scriptVersionId)
   const [versions, setVersions] = useState<ScriptVersion[]>([]);
   const [versionsLoading, setVersionsLoading] = useState(false);
-  const [selectedVersion, setSelectedVersion] = useState<ScriptVersion | null>(null);
+  const [selectedVersion, setSelectedVersion] = useState<ScriptVersion | null>(
+    null,
+  );
 
   const [form, setForm] = useState({
     location: "",
@@ -109,7 +116,7 @@ export default function CreateEventPage() {
   // Effective duration to display
   const effectiveDuration = scriptVersionId
     ? versionState?.duration
-    : selectedVersion?.duration ?? selectedScript?.duration;
+    : (selectedVersion?.duration ?? selectedScript?.duration);
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
@@ -204,9 +211,11 @@ export default function CreateEventPage() {
                       onClick={() => selectScript(s)}
                       className="w-full text-left px-3 py-2.5 text-sm hover:bg-gray-50 flex items-center justify-between gap-4 border-b border-gray-100 last:border-0"
                     >
-                      <span className="font-medium text-gray-900">{s.title}</span>
+                      <span className="font-medium text-gray-900">
+                        {s.title}
+                      </span>
                       <span className="text-xs text-gray-400 shrink-0">
-                        {s.total_slots}人・{s.difficulty_label}
+                        {s.total_slots}人・{DIFFICULTY_LABELS[s.difficulty]}
                       </span>
                     </button>
                   ))}
@@ -378,7 +387,9 @@ export default function CreateEventPage() {
               </label>
             )}
             <div className="space-y-1.5">
-              <p className="text-xs text-gray-500 font-medium">線下已確定朋友</p>
+              <p className="text-xs text-gray-500 font-medium">
+                線下已確定朋友
+              </p>
               {(
                 [
                   ["offline_male", "男"],

@@ -19,6 +19,7 @@ import type { Event } from "../types";
 
 import {
   DIFFICULTY_COLORS,
+  DIFFICULTY_LABELS,
   EVENT_STATUS_LABELS as STATUS_LABELS,
   EVENT_STATUS_COLORS as STATUS_COLORS,
   MEMBER_STATUS_LABELS,
@@ -50,7 +51,9 @@ export default function EventDetailPage() {
   });
   const [editScheduledAt, setEditScheduledAt] = useState<Date | null>(null);
   const [editVersions, setEditVersions] = useState<ScriptVersion[]>([]);
-  const [editScriptVersionId, setEditScriptVersionId] = useState<number | null>(null);
+  const [editScriptVersionId, setEditScriptVersionId] = useState<number | null>(
+    null,
+  );
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -244,7 +247,7 @@ export default function EventDetailPage() {
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLORS[event.script.difficulty]}`}
           >
-            {event.script.difficulty_label}
+            {DIFFICULTY_LABELS[event.script.difficulty]}
           </span>
           {event.script.genres.map((g) => (
             <span
@@ -267,10 +270,10 @@ export default function EventDetailPage() {
             event.script.version_name,
             event.script.duration != null ? `${event.script.duration}h` : null,
             event.script.price != null ? `NT$${event.script.price}` : null,
-          ].filter(Boolean)
+          ].filter(Boolean);
           return (
             <p className="text-xs text-gray-400 mb-4">{parts.join("・")}</p>
-          )
+          );
         })()}
 
         <dl className="space-y-2 text-sm mb-4">
@@ -286,7 +289,10 @@ export default function EventDetailPage() {
             <div className="flex justify-between">
               <dt className="text-gray-400">主辦</dt>
               <dd>
-                <Link to={`/users/${event.host.handle}`} className="text-gray-900 hover:text-brand transition-colors">
+                <Link
+                  to={`/users/${event.host.handle}`}
+                  className="text-gray-900 hover:text-brand transition-colors"
+                >
                   {event.host.nickname}
                 </Link>
               </dd>
@@ -346,9 +352,7 @@ export default function EventDetailPage() {
                     </div>
                     {editVersions.length > 0 && (
                       <div>
-                        <p className="text-xs text-gray-500 mb-1.5">
-                          店家版本
-                        </p>
+                        <p className="text-xs text-gray-500 mb-1.5">店家版本</p>
                         <div className="space-y-1.5">
                           {editVersions.map((v) => (
                             <button
@@ -559,155 +563,159 @@ export default function EventDetailPage() {
           <div className="bg-surface rounded-lg border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-3">報名名單</h2>
             <div className="space-y-2">
-              {event.members.filter(m => m.status !== 'cancelled' && m.status !== 'rejected').map((m) => {
-                const showName =
-                  isHost || m.user.id === user?.id || m.status !== "pending";
-                return (
-                  <div
-                    key={m.id}
-                    className="py-1.5 border-b border-gray-50 last:border-0"
-                  >
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {showName && m.user.id === event.host.id ? (
-                          <Link
-                            to={`/users/${m.user.handle}`}
-                            className="text-gray-700 font-medium hover:text-brand transition-colors"
-                          >
-                            {m.user.nickname}
-                          </Link>
-                        ) : (
+              {event.members
+                .filter(
+                  (m) => m.status !== "cancelled" && m.status !== "rejected",
+                )
+                .map((m) => {
+                  const showName =
+                    isHost || m.user.id === user?.id || m.status !== "pending";
+                  return (
+                    <div
+                      key={m.id}
+                      className="py-1.5 border-b border-gray-50 last:border-0"
+                    >
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {showName && m.user.id === event.host.id ? (
+                            <Link
+                              to={`/users/${m.user.handle}`}
+                              className="text-gray-700 font-medium hover:text-brand transition-colors"
+                            >
+                              {m.user.nickname}
+                            </Link>
+                          ) : (
+                            <span
+                              className={
+                                showName
+                                  ? "text-gray-700 font-medium"
+                                  : "text-gray-400 italic"
+                              }
+                            >
+                              {showName ? m.user.nickname : "匿名"}
+                            </span>
+                          )}
+                          {m.user.id === event.host.id && (
+                            <span className="text-xs bg-brand text-white px-1.5 py-0.5 rounded">
+                              主揪
+                            </span>
+                          )}
                           <span
-                            className={
-                              showName
-                                ? "text-gray-700 font-medium"
-                                : "text-gray-400 italic"
-                            }
+                            className={`text-xs w-5 h-5 rounded-full inline-flex items-center justify-center font-medium ${m.user.gender === "male" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"}`}
                           >
-                            {showName ? m.user.nickname : "匿名"}
+                            {m.user.gender === "male" ? "♂" : "♀"}
                           </span>
-                        )}
-                        {m.user.id === event.host.id && (
-                          <span className="text-xs bg-brand text-white px-1.5 py-0.5 rounded">
-                            主揪
+                          {m.cross_gender && (
+                            <span className="text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded">
+                              反串
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-gray-400 text-xs">
+                            {MEMBER_STATUS_LABELS[m.status]}
                           </span>
-                        )}
-                        <span
-                          className={`text-xs w-5 h-5 rounded-full inline-flex items-center justify-center font-medium ${m.user.gender === "male" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"}`}
-                        >
-                          {m.user.gender === "male" ? "♂" : "♀"}
-                        </span>
-                        {m.cross_gender && (
-                          <span className="text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded">
-                            反串
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-gray-400 text-xs">
-                          {MEMBER_STATUS_LABELS[m.status]}
-                        </span>
-                        {isHost && m.status === "pending" && (
-                          <>
+                          {isHost && m.status === "pending" && (
+                            <>
+                              <button
+                                onClick={() =>
+                                  handleMemberUpdate(m.id, "confirmed")
+                                }
+                                className="text-green-600 hover:text-green-800 text-xs"
+                              >
+                                確認
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleMemberUpdate(m.id, "rejected")
+                                }
+                                className="text-red-500 hover:text-red-700 text-xs"
+                              >
+                                拒絕
+                              </button>
+                            </>
+                          )}
+                          {isHost && m.status === "leave_requested" && (
                             <button
                               onClick={() =>
-                                handleMemberUpdate(m.id, "confirmed")
+                                handleMemberUpdate(m.id, "cancelled")
                               }
-                              className="text-green-600 hover:text-green-800 text-xs"
+                              className="text-orange-500 hover:text-orange-700 text-xs"
                             >
-                              確認
+                              同意退出
                             </button>
-                            <button
-                              onClick={() =>
-                                handleMemberUpdate(m.id, "rejected")
-                              }
-                              className="text-red-500 hover:text-red-700 text-xs"
-                            >
-                              拒絕
-                            </button>
-                          </>
-                        )}
-                        {isHost && m.status === "leave_requested" && (
-                          <button
-                            onClick={() =>
-                              handleMemberUpdate(m.id, "cancelled")
-                            }
-                            className="text-orange-500 hover:text-orange-700 text-xs"
-                          >
-                            同意退出
-                          </button>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex gap-3 mt-0.5 text-xs text-gray-400 flex-wrap">
-                      {((isHost && m.user.id !== event.host.id) ||
-                        (!isHost && m.user.id === user?.id)) && (
-                        <span>
-                          申請{" "}
-                          {new Date(m.applied_at).toLocaleString("zh-TW", {
-                            month: "2-digit",
-                            day: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: false,
-                          })}
-                        </span>
-                      )}
-                      {m.confirmed_at && (
-                        <span>
-                          確認{" "}
-                          {new Date(m.confirmed_at).toLocaleString("zh-TW", {
-                            month: "2-digit",
-                            day: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: false,
-                          })}
-                        </span>
-                      )}
-                      {m.rejected_at && (
-                        <span>
-                          拒絕{" "}
-                          {new Date(m.rejected_at).toLocaleString("zh-TW", {
-                            month: "2-digit",
-                            day: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: false,
-                          })}
-                        </span>
-                      )}
-                      {m.leave_requested_at && (
-                        <span>
-                          申請下車{" "}
-                          {new Date(m.leave_requested_at).toLocaleString(
-                            "zh-TW",
-                            {
+                      <div className="flex gap-3 mt-0.5 text-xs text-gray-400 flex-wrap">
+                        {((isHost && m.user.id !== event.host.id) ||
+                          (!isHost && m.user.id === user?.id)) && (
+                          <span>
+                            申請{" "}
+                            {new Date(m.applied_at).toLocaleString("zh-TW", {
                               month: "2-digit",
                               day: "2-digit",
                               hour: "2-digit",
                               minute: "2-digit",
                               hour12: false,
-                            },
-                          )}
-                        </span>
-                      )}
-                      {m.cancelled_at && (
-                        <span>
-                          取消{" "}
-                          {new Date(m.cancelled_at).toLocaleString("zh-TW", {
-                            month: "2-digit",
-                            day: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: false,
-                          })}
-                        </span>
-                      )}
+                            })}
+                          </span>
+                        )}
+                        {m.confirmed_at && (
+                          <span>
+                            確認{" "}
+                            {new Date(m.confirmed_at).toLocaleString("zh-TW", {
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                            })}
+                          </span>
+                        )}
+                        {m.rejected_at && (
+                          <span>
+                            拒絕{" "}
+                            {new Date(m.rejected_at).toLocaleString("zh-TW", {
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                            })}
+                          </span>
+                        )}
+                        {m.leave_requested_at && (
+                          <span>
+                            申請下車{" "}
+                            {new Date(m.leave_requested_at).toLocaleString(
+                              "zh-TW",
+                              {
+                                month: "2-digit",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: false,
+                              },
+                            )}
+                          </span>
+                        )}
+                        {m.cancelled_at && (
+                          <span>
+                            取消{" "}
+                            {new Date(m.cancelled_at).toLocaleString("zh-TW", {
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                            })}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
               {Array.from({ length: event.offline_male }).map((_, i) => (
                 <div
                   key={`offline-male-${i}`}
@@ -740,58 +748,81 @@ export default function EventDetailPage() {
                   </div>
                 </div>
               ))}
-              {event.members.filter(m => m.status === 'cancelled' || m.status === 'rejected').map((m) => {
-                const showName =
-                  isHost || m.user.id === user?.id || m.status !== "pending";
-                return (
-                  <div
-                    key={m.id}
-                    className="py-1.5 border-b border-gray-50 last:border-0 opacity-50"
-                  >
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={showName ? "text-gray-700 font-medium" : "text-gray-400 italic"}>
-                          {showName ? m.user.nickname : "匿名"}
-                        </span>
-                        <span className={`text-xs w-5 h-5 rounded-full inline-flex items-center justify-center font-medium ${m.user.gender === "male" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"}`}>
-                          {m.user.gender === "male" ? "♂" : "♀"}
+              {event.members
+                .filter(
+                  (m) => m.status === "cancelled" || m.status === "rejected",
+                )
+                .map((m) => {
+                  const showName =
+                    isHost || m.user.id === user?.id || m.status !== "pending";
+                  return (
+                    <div
+                      key={m.id}
+                      className="py-1.5 border-b border-gray-50 last:border-0 opacity-50"
+                    >
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span
+                            className={
+                              showName
+                                ? "text-gray-700 font-medium"
+                                : "text-gray-400 italic"
+                            }
+                          >
+                            {showName ? m.user.nickname : "匿名"}
+                          </span>
+                          <span
+                            className={`text-xs w-5 h-5 rounded-full inline-flex items-center justify-center font-medium ${m.user.gender === "male" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"}`}
+                          >
+                            {m.user.gender === "male" ? "♂" : "♀"}
+                          </span>
+                        </div>
+                        <span className="text-gray-400 text-xs">
+                          {MEMBER_STATUS_LABELS[m.status]}
                         </span>
                       </div>
-                      <span className="text-gray-400 text-xs">{MEMBER_STATUS_LABELS[m.status]}</span>
+                      <div className="flex gap-3 mt-0.5 text-xs text-gray-400 flex-wrap">
+                        {((isHost && m.user.id !== event.host.id) ||
+                          (!isHost && m.user.id === user?.id)) && (
+                          <span>
+                            申請{" "}
+                            {new Date(m.applied_at).toLocaleString("zh-TW", {
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                            })}
+                          </span>
+                        )}
+                        {m.rejected_at && (
+                          <span>
+                            拒絕{" "}
+                            {new Date(m.rejected_at).toLocaleString("zh-TW", {
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                            })}
+                          </span>
+                        )}
+                        {m.cancelled_at && (
+                          <span>
+                            取消{" "}
+                            {new Date(m.cancelled_at).toLocaleString("zh-TW", {
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                            })}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex gap-3 mt-0.5 text-xs text-gray-400 flex-wrap">
-                      {((isHost && m.user.id !== event.host.id) ||
-                        (!isHost && m.user.id === user?.id)) && (
-                        <span>
-                          申請{" "}
-                          {new Date(m.applied_at).toLocaleString("zh-TW", {
-                            month: "2-digit", day: "2-digit",
-                            hour: "2-digit", minute: "2-digit", hour12: false,
-                          })}
-                        </span>
-                      )}
-                      {m.rejected_at && (
-                        <span>
-                          拒絕{" "}
-                          {new Date(m.rejected_at).toLocaleString("zh-TW", {
-                            month: "2-digit", day: "2-digit",
-                            hour: "2-digit", minute: "2-digit", hour12: false,
-                          })}
-                        </span>
-                      )}
-                      {m.cancelled_at && (
-                        <span>
-                          取消{" "}
-                          {new Date(m.cancelled_at).toLocaleString("zh-TW", {
-                            month: "2-digit", day: "2-digit",
-                            hour: "2-digit", minute: "2-digit", hour12: false,
-                          })}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
         )}

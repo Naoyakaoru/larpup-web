@@ -17,7 +17,7 @@ export const EVENT_STATUS_COLORS: Record<Event['status'], string> = {
 export const DIFFICULTY_LABELS: Record<Script['difficulty'], string> = {
   easy: '入門',
   medium: '進階',
-  hard: '燒腦',
+  hard: '重度',
 }
 
 export const DIFFICULTY_COLORS: Record<Script['difficulty'], string> = {
@@ -26,6 +26,12 @@ export const DIFFICULTY_COLORS: Record<Script['difficulty'], string> = {
   hard: 'bg-red-100 text-red-700',
 }
 
+export const DIFFICULTY_OPTIONS: { value: Script['difficulty']; label: string }[] = [
+  { value: 'easy', label: '入門' },
+  { value: 'medium', label: '進階' },
+  { value: 'hard', label: '重度' },
+]
+
 export const MEMBER_STATUS_LABELS: Record<EventMember['status'], string> = {
   pending: '待審核',
   confirmed: '已確認',
@@ -33,3 +39,14 @@ export const MEMBER_STATUS_LABELS: Record<EventMember['status'], string> = {
   cancelled: '已取消',
   leave_requested: '申請退出',
 }
+
+export const GENRES: [number, string][] = [
+  [0, '推理'], [1, '還原'], [2, '恐怖'], [3, '情感'],
+  [4, '歡樂'], [5, '機制'], [6, '陣營'], [7, '古風'], [8, '現代'],
+]
+
+export const GENRE_LABELS: Record<number, string> = Object.fromEntries(GENRES)
+
+export const GENRE_BY_LABEL: Record<string, number> = Object.fromEntries(
+  GENRES.map(([id, label]) => [label, id])
+)

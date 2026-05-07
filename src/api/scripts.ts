@@ -44,3 +44,21 @@ export function approveScript(id: number) {
 export function rejectScript(id: number) {
   return request<Script>(`/admin/scripts/${id}/reject`, { method: 'PATCH' })
 }
+
+export interface BulkImportRow {
+  title: string
+  difficulty: 'easy' | 'medium' | 'hard'
+  genres: number[]
+  male_slots: number
+  female_slots: number
+  any_slots: number
+  duration: number | null
+  description: string
+}
+
+export function bulkImportScripts(scripts: BulkImportRow[]) {
+  return request<{ created: number; errors: { index: number; title: string; messages: string[] }[] }>(
+    '/admin/scripts/bulk_import',
+    { method: 'POST', body: JSON.stringify({ scripts }) },
+  )
+}
