@@ -38,6 +38,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
       version_name: null,
     },
     host: { id: 10, handle: "host", nickname: "Host" },
+    script_version_id: 1,
     allow_cross_gender: false,
     offline_male: 0,
     offline_female: 0,
