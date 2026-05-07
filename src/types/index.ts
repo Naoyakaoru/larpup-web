@@ -28,7 +28,9 @@ export interface Script {
   female_slots: number;
   any_slots: number;
   total_slots: number;
+  duration: number | null;
   description: string;
+  status: "pending" | "approved" | "rejected";
   cover_image_url: string | null;
 }
 
@@ -44,8 +46,13 @@ export interface Event {
     difficulty: "easy" | "medium" | "hard";
     difficulty_label: string;
     genres: string[];
+    duration: number | null;
+    price: number | null;
+    store: { id: number; name: string } | null;
+    version_name: string | null;
   };
   host: { id: number; handle: string; nickname: string };
+  script_version_id: number;
   allow_cross_gender: boolean;
   offline_male: number;
   offline_female: number;
@@ -86,4 +93,11 @@ export interface EventMember {
 export interface AuthResponse {
   token: string;
   user: User;
+}
+
+export interface Store {
+  id: number;
+  name: string;
+  status: "active" | "inactive";
+  owner: { id: number; handle: string; nickname: string };
 }

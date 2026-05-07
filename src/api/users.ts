@@ -25,3 +25,11 @@ export function getMyEvents() {
 export function getUserProfile(handle: string) {
   return request<PublicProfile>(`/users/${handle}`)
 }
+
+export function searchUsers(q: string) {
+  return request<User[]>(`/users/search?q=${encodeURIComponent(q)}`)
+}
+
+export function getMyStores() {
+  return request<{ id: number; name: string; status: string; role: string }[]>('/users/me/stores')
+}

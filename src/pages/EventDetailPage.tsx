@@ -12,6 +12,7 @@ import {
   restoreEvent,
   cancelEvent,
 } from "../api/events";
+import { getScriptVersions, type ScriptVersion } from "../api/scripts";
 import { useAuth } from "../contexts/AuthContext";
 import { calcRemainingAfterOnline, canAddOffline } from "../utils/slotCalc";
 import type { Event } from "../types";
@@ -48,6 +49,8 @@ export default function EventDetailPage() {
     allow_cross_gender: false,
   });
   const [editScheduledAt, setEditScheduledAt] = useState<Date | null>(null);
+  const [editVersions, setEditVersions] = useState<ScriptVersion[]>([]);
+  const [editScriptVersionId, setEditScriptVersionId] = useState<number | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -112,6 +115,14 @@ export default function EventDetailPage() {
       allow_cross_gender: event!.allow_cross_gender,
     });
     setEditScheduledAt(new Date(event!.scheduled_at));
+    setEditScriptVersionId(event!.script_version_id);
+    setEditVersions([]);
+    const hasOtherMembers = event!.members?.some(
+      (m) => m.user.id !== event!.host.id,
+    );
+    if (!hasOtherMembers) {
+      getScriptVersions(event!.script.id).then(setEditVersions);
+    }
     setEditing(true);
   }
 
@@ -121,6 +132,7 @@ export default function EventDetailPage() {
         (m) => m.user.id !== event!.host.id,
       );
       const data: Partial<{
+        script_version_id: number;
         location: string;
         scheduled_at: string;
         offline_male: number;
@@ -134,6 +146,12 @@ export default function EventDetailPage() {
       };
       if (!hasOtherMembers && editScheduledAt)
         data.scheduled_at = editScheduledAt.toISOString();
+      if (
+        !hasOtherMembers &&
+        editScriptVersionId !== null &&
+        editScriptVersionId !== event!.script_version_id
+      )
+        data.script_version_id = editScriptVersionId;
       setEvent(await updateEvent(Number(id), data));
       setEditing(false);
     } catch (err) {
@@ -222,7 +240,7 @@ export default function EventDetailPage() {
           </span>
         </div>
 
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        <div className="flex flex-wrap gap-1.5 mb-3">
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLORS[event.script.difficulty]}`}
           >
@@ -242,6 +260,18 @@ export default function EventDetailPage() {
             </span>
           )}
         </div>
+
+        {(() => {
+          const parts = [
+            event.script.store?.name,
+            event.script.version_name,
+            event.script.duration != null ? `${event.script.duration}h` : null,
+            event.script.price != null ? `NT$${event.script.price}` : null,
+          ].filter(Boolean)
+          return (
+            <p className="text-xs text-gray-400 mb-4">{parts.join("・")}</p>
+          )
+        })()}
 
         <dl className="space-y-2 text-sm mb-4">
           <div className="flex justify-between">
@@ -287,32 +317,66 @@ export default function EventDetailPage() {
                   />
                 </div>
                 {!event.members?.some((m) => m.user.id !== event.host.id) && (
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">
-                      時間
-                    </label>
-                    <DatePicker
-                      selected={editScheduledAt}
-                      onChange={setEditScheduledAt}
-                      showTimeSelect
-                      timeIntervals={30}
-                      dateFormat="yyyy/MM/dd HH:mm"
-                      timeFormat="HH:mm"
-                      className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-                      wrapperClassName="w-full"
-                      onCalendarOpen={() => {
-                        setTimeout(() => {
-                          const list = document.querySelector(
-                            ".react-datepicker__time-list",
-                          );
-                          const items = list?.querySelectorAll(
-                            ".react-datepicker__time-list-item",
-                          );
-                          items?.[16]?.scrollIntoView({ block: "start" });
-                        }, 0);
-                      }}
-                    />
-                  </div>
+                  <>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">
+                        時間
+                      </label>
+                      <DatePicker
+                        selected={editScheduledAt}
+                        onChange={setEditScheduledAt}
+                        showTimeSelect
+                        timeIntervals={30}
+                        dateFormat="yyyy/MM/dd HH:mm"
+                        timeFormat="HH:mm"
+                        className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                        wrapperClassName="w-full"
+                        onCalendarOpen={() => {
+                          setTimeout(() => {
+                            const list = document.querySelector(
+                              ".react-datepicker__time-list",
+                            );
+                            const items = list?.querySelectorAll(
+                              ".react-datepicker__time-list-item",
+                            );
+                            items?.[16]?.scrollIntoView({ block: "start" });
+                          }, 0);
+                        }}
+                      />
+                    </div>
+                    {editVersions.length > 0 && (
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1.5">
+                          店家版本
+                        </p>
+                        <div className="space-y-1.5">
+                          {editVersions.map((v) => (
+                            <button
+                              key={v.id}
+                              type="button"
+                              onClick={() => setEditScriptVersionId(v.id)}
+                              className={`w-full text-left rounded-md border px-3 py-2 text-sm transition-colors ${
+                                editScriptVersionId === v.id
+                                  ? "border-brand bg-brand/5"
+                                  : "border-gray-200 hover:border-gray-300 bg-white"
+                              }`}
+                            >
+                              <div className="flex justify-between items-center gap-2">
+                                <span className="font-medium text-gray-900">
+                                  {v.store.name}
+                                </span>
+                                {v.version_name && (
+                                  <span className="text-xs text-gray-400 shrink-0">
+                                    {v.version_name}
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
                 <div>
                   <p className="text-xs text-gray-500 mb-1.5">線下已確定朋友</p>
@@ -495,7 +559,7 @@ export default function EventDetailPage() {
           <div className="bg-surface rounded-lg border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-3">報名名單</h2>
             <div className="space-y-2">
-              {event.members.map((m) => {
+              {event.members.filter(m => m.status !== 'cancelled' && m.status !== 'rejected').map((m) => {
                 const showName =
                   isHost || m.user.id === user?.id || m.status !== "pending";
                 return (
@@ -676,6 +740,58 @@ export default function EventDetailPage() {
                   </div>
                 </div>
               ))}
+              {event.members.filter(m => m.status === 'cancelled' || m.status === 'rejected').map((m) => {
+                const showName =
+                  isHost || m.user.id === user?.id || m.status !== "pending";
+                return (
+                  <div
+                    key={m.id}
+                    className="py-1.5 border-b border-gray-50 last:border-0 opacity-50"
+                  >
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={showName ? "text-gray-700 font-medium" : "text-gray-400 italic"}>
+                          {showName ? m.user.nickname : "匿名"}
+                        </span>
+                        <span className={`text-xs w-5 h-5 rounded-full inline-flex items-center justify-center font-medium ${m.user.gender === "male" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"}`}>
+                          {m.user.gender === "male" ? "♂" : "♀"}
+                        </span>
+                      </div>
+                      <span className="text-gray-400 text-xs">{MEMBER_STATUS_LABELS[m.status]}</span>
+                    </div>
+                    <div className="flex gap-3 mt-0.5 text-xs text-gray-400 flex-wrap">
+                      {((isHost && m.user.id !== event.host.id) ||
+                        (!isHost && m.user.id === user?.id)) && (
+                        <span>
+                          申請{" "}
+                          {new Date(m.applied_at).toLocaleString("zh-TW", {
+                            month: "2-digit", day: "2-digit",
+                            hour: "2-digit", minute: "2-digit", hour12: false,
+                          })}
+                        </span>
+                      )}
+                      {m.rejected_at && (
+                        <span>
+                          拒絕{" "}
+                          {new Date(m.rejected_at).toLocaleString("zh-TW", {
+                            month: "2-digit", day: "2-digit",
+                            hour: "2-digit", minute: "2-digit", hour12: false,
+                          })}
+                        </span>
+                      )}
+                      {m.cancelled_at && (
+                        <span>
+                          取消{" "}
+                          {new Date(m.cancelled_at).toLocaleString("zh-TW", {
+                            month: "2-digit", day: "2-digit",
+                            hour: "2-digit", minute: "2-digit", hour12: false,
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

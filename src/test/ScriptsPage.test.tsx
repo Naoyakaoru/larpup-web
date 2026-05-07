@@ -22,6 +22,8 @@ function makeScript(overrides: Partial<Script> = {}): Script {
     any_slots: 1,
     total_slots: 6,
     description: "一個黑暗的夜晚…",
+    status: "approved",
+    duration: null,
     cover_image_url: null,
     ...overrides,
   };

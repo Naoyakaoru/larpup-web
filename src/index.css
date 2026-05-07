@@ -38,7 +38,7 @@ body {
 
   /* Surface tokens — 卡片/容器在深色模式變深 */
   --color-surface: #1e293b;
-  --color-surface-2: #0f172a;
+  --color-surface-2: #0f172a; /* dropdown/popover — same as page bg, border provides separation */
 
   /* 狀態 tag 顏色 — 深色背景 + 淺色文字 */
   --color-green-50: #052e16;
@@ -85,6 +85,15 @@ body {
 .dark body {
   background-color: var(--color-bg-base);
   color: var(--color-text-base);
+}
+
+/* Prevent scroll wheel from changing number input values */
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
 }
 
 /* Form inputs in dark mode */
