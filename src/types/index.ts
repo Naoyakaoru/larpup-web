@@ -29,6 +29,7 @@ export interface Script {
   total_slots: number;
   duration: number | null;
   description: string;
+  publisher: string | null;
   status: "pending" | "approved" | "rejected";
   cover_image_url: string | null;
 }

@@ -95,7 +95,8 @@ function csvRowToRow(raw: Record<string, string>, key: number): Row {
     duration: raw["duration_hours"]
       ? parseInt(raw["duration_hours"], 10) || null
       : null,
-    description: "",
+    description: raw["description"] || "",
+    publisher: raw["publisher"] || null,
   };
 }
 
@@ -156,6 +157,7 @@ export default function ImportScriptsPage() {
         any_slots: r.any_slots,
         duration: r.duration,
         description: r.description,
+        publisher: r.publisher,
       }));
       const res = await bulkImportScripts(payload);
       setResult(res);
@@ -260,6 +262,9 @@ export default function ImportScriptsPage() {
                     劇本名稱
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-gray-600 w-28">
+                    發行商
+                  </th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 w-28">
                     難度
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-gray-600 min-w-[160px]">
@@ -276,6 +281,9 @@ export default function ImportScriptsPage() {
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-gray-600 w-20">
                     時長(h)
+                  </th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 min-w-[200px]">
+                    介紹
                   </th>
                 </tr>
               </thead>
@@ -304,6 +312,9 @@ export default function ImportScriptsPage() {
                         }
                         className="w-full border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand rounded px-1 py-0.5"
                       />
+                    </td>
+                    <td className="px-3 py-2 text-xs text-gray-500 whitespace-nowrap">
+                      {row.publisher || "—"}
                     </td>
                     <td className="px-3 py-2">
                       <select
@@ -386,6 +397,16 @@ export default function ImportScriptsPage() {
                           })
                         }
                         className="w-full border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand rounded px-1 py-0.5"
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <textarea
+                        value={row.description}
+                        rows={2}
+                        onChange={(e) =>
+                          update(row._key, { description: e.target.value })
+                        }
+                        className="w-full border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand rounded px-1 py-0.5 resize-none text-xs"
                       />
                     </td>
                   </tr>

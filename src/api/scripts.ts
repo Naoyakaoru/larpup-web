@@ -54,6 +54,7 @@ export interface BulkImportRow {
   any_slots: number
   duration: number | null
   description: string
+  publisher?: string | null
 }
 
 export function bulkImportScripts(scripts: BulkImportRow[]) {

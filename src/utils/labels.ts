@@ -44,6 +44,7 @@ export const GENRES: [number, string][] = [
   [0, '推理'], [1, '還原'], [2, '恐怖'], [3, '情感'],
   [4, '歡樂'], [5, '機制'], [6, '陣營'], [7, '古風'], [8, '現代'],
   [9, '日式'], [10, '中式'], [11, '民國'], [12, '社會'], [13, '刑偵'], [14, '演繹'],
+  [15, '城限'], [16, '獨家'],
 ]
 
 export const GENRE_LABELS: Record<number, string> = Object.fromEntries(GENRES)
