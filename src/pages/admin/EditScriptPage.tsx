@@ -2,7 +2,7 @@ import { useState, useEffect, type ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getScript, updateScript } from "../../api/scripts";
 import type { Script } from "../../types";
-import { GENRES, GENRE_BY_LABEL, DIFFICULTY_OPTIONS } from "../../utils/labels";
+import { GENRES, DIFFICULTY_OPTIONS } from "../../utils/labels";
 
 export default function EditScriptPage() {
   const { id } = useParams<{ id: string }>();
@@ -35,11 +35,7 @@ export default function EditScriptPage() {
         female_slots: s.female_slots,
         any_slots: s.any_slots,
       });
-      setGenres(
-        s.genres
-          .map((label) => GENRE_BY_LABEL[label])
-          .filter((id): id is number => id !== undefined),
-      );
+      setGenres(s.genres);
     });
   }, [id]);
 

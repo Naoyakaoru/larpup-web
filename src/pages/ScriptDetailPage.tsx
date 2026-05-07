@@ -4,7 +4,11 @@ import { getScript, getScriptVersions } from "../api/scripts";
 import type { ScriptVersion } from "../api/scripts";
 import type { Script } from "../types";
 
-import { DIFFICULTY_COLORS, DIFFICULTY_LABELS } from "../utils/labels";
+import {
+  DIFFICULTY_COLORS,
+  DIFFICULTY_LABELS,
+  GENRE_LABELS,
+} from "../utils/labels";
 
 export default function ScriptDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -61,7 +65,7 @@ export default function ScriptDetailPage() {
                 key={g}
                 className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full"
               >
-                {g}
+                {GENRE_LABELS[g]}
               </span>
             ))}
           </div>

@@ -5,6 +5,7 @@ import {
   EVENT_STATUS_LABELS as STATUS_LABELS,
   EVENT_STATUS_COLORS as STATUS_COLORS,
   DIFFICULTY_LABELS,
+  GENRE_LABELS,
 } from "../utils/labels";
 import type { Event } from "../types";
 
@@ -85,7 +86,7 @@ export default function EventsPage() {
                         key={g}
                         className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full"
                       >
-                        {g}
+                        {GENRE_LABELS[g]}
                       </span>
                     ))}
                     {event.allow_cross_gender ? (

@@ -21,7 +21,7 @@ export interface PublicProfile {
 export interface Script {
   id: number;
   title: string;
-  genres: string[];
+  genres: number[];
   difficulty: "easy" | "medium" | "hard";
   male_slots: number;
   female_slots: number;
@@ -43,7 +43,7 @@ export interface Event {
     female_slots: number;
     any_slots: number;
     difficulty: "easy" | "medium" | "hard";
-    genres: string[];
+    genres: number[];
     duration: number | null;
     price: number | null;
     store: { id: number; name: string } | null;

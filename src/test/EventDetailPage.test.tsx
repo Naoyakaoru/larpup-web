@@ -92,7 +92,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
       female_slots: 2,
       any_slots: 1,
       difficulty: "medium",
-      genres: ["推理"],
+      genres: [0],
       duration: null,
       price: null,
       store: null,

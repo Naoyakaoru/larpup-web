@@ -14,7 +14,7 @@ function makeScript(overrides: Partial<Script> = {}): Script {
   return {
     id: 1,
     title: "月夜謀殺案",
-    genres: ["推理"],
+    genres: [0],
     difficulty: "medium",
     male_slots: 3,
     female_slots: 2,
@@ -111,7 +111,7 @@ describe("ScriptsPage – slot format", () => {
   });
 
   it("renders genre tags", async () => {
-    mockScripts = [makeScript({ genres: ["推理", "恐怖"] })];
+    mockScripts = [makeScript({ genres: [0, 2] })];
     renderPage();
 
     await screen.findByText("推理");
