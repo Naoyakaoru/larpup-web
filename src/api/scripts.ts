@@ -58,7 +58,7 @@ export interface BulkImportRow {
 }
 
 export function bulkImportScripts(scripts: BulkImportRow[]) {
-  return request<{ created: number; errors: { index: number; title: string; messages: string[] }[] }>(
+  return request<{ created: number; skipped: number; errors: { index: number; title: string; messages: string[] }[] }>(
     '/admin/scripts/bulk_import',
     { method: 'POST', body: JSON.stringify({ scripts }) },
   )

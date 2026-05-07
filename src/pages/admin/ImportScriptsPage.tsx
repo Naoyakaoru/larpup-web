@@ -109,6 +109,7 @@ export default function ImportScriptsPage() {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{
     created: number;
+    skipped: number;
     errors: { index: number; title: string; messages: string[] }[];
   } | null>(null);
 
@@ -202,7 +203,10 @@ export default function ImportScriptsPage() {
         <div
           className={`mb-6 p-4 rounded-lg text-sm ${result.errors.length === 0 ? "bg-green-50 text-green-800" : "bg-yellow-50 text-yellow-800"}`}
         >
-          <p className="font-medium">匯入完成：{result.created} 筆成功建立</p>
+          <p className="font-medium">
+            匯入完成：{result.created} 筆成功建立
+            {result.skipped > 0 && `，${result.skipped} 筆已存在略過`}
+          </p>
           {result.errors.length > 0 && (
             <ul className="mt-2 list-disc list-inside space-y-1">
               {result.errors.map((e) => (
