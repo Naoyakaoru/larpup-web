@@ -1,274 +1,126 @@
-import { useEffect, useState, useRef } from 'react'
-import { useParams } from 'react-router-dom'
-import { getStoreScriptVersions, updateStoreScriptVersion, createStoreScriptVersion } from '../api/stores'
-import type { StoreScriptVersion } from '../api/stores'
-import { getScripts } from '../api/scripts'
-import type { Script } from '../types'
-import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '../utils/labels'
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { getStoreScriptVersions, updateStoreScriptVersion, deleteStoreScriptVersion } from "../api/stores";
+import type { StoreScriptVersion } from "../api/stores";
+import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from "../utils/labels";
+import AddVersionForm from "../components/AddVersionForm";
 
-const GENRES = [
-  [0, '推理'], [1, '還原'], [2, '恐怖'], [3, '情感'],
-  [4, '歡樂'], [5, '機制'], [6, '陣營'], [7, '古風'], [8, '現代'],
-] as const
 
-// ── Add form ────────────────────────────────────────────────────────────────
-
-function AddForm({ storeId, onAdded }: { storeId: number; onAdded: (v: StoreScriptVersion) => void }) {
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<Script[]>([])
-  const [selected, setSelected] = useState<Script | null>(null)
-  const [showNew, setShowNew] = useState(false)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [searching, setSearching] = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  const [price, setPrice] = useState('')
-  const [durationOverride, setDurationOverride] = useState('')
-  const [versionName, setVersionName] = useState('')
-
-  // new script fields
-  const [newTitle, setNewTitle] = useState('')
-  const [newDifficulty, setNewDifficulty] = useState('easy')
-  const [newMale, setNewMale] = useState(0)
-  const [newFemale, setNewFemale] = useState(0)
-  const [newAny, setNewAny] = useState(0)
-  const [newGenres, setNewGenres] = useState<number[]>([])
-  const [newDuration, setNewDuration] = useState('')
-
-  const [error, setError] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node))
-        setDropdownOpen(false)
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  function handleSearch(q: string) {
-    setQuery(q)
-    setSelected(null)
-    setShowNew(false)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (!q.trim()) { setResults([]); setDropdownOpen(false); return }
-    setSearching(true)
-    setDropdownOpen(true)
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const all = await getScripts()
-        setResults(all.filter(s => s.title.includes(q)))
-      } finally {
-        setSearching(false)
-      }
-    }, 500)
-  }
-
-  function selectScript(s: Script) {
-    setSelected(s)
-    setQuery(s.title)
-    setDropdownOpen(false)
-    setShowNew(false)
-  }
-
-  async function handleSubmit(e: { preventDefault(): void }) {
-    e.preventDefault()
-    setError('')
-    setSubmitting(true)
-    try {
-      let version: StoreScriptVersion
-      if (showNew) {
-        version = await createStoreScriptVersion(storeId, {
-          title: newTitle,
-          difficulty: newDifficulty,
-          male_slots: newMale,
-          female_slots: newFemale,
-          any_slots: newAny,
-          genres: newGenres,
-          duration_override: Number(newDuration),
-          price: Number(price),
-          version_name: versionName || undefined,
-        })
-      } else {
-        if (!selected) { setError('請選擇劇本'); setSubmitting(false); return }
-        version = await createStoreScriptVersion(storeId, {
-          script_id: selected.id,
-          price: Number(price),
-          duration_override: durationOverride ? Number(durationOverride) : undefined,
-          version_name: versionName || undefined,
-        })
-      }
-      onAdded(version)
-      // reset
-      setQuery(''); setSelected(null); setShowNew(false)
-      setPrice(''); setDurationOverride(''); setVersionName('')
-      setNewTitle(''); setNewDifficulty('easy'); setNewMale(0); setNewFemale(0); setNewAny(0); setNewGenres([]); setNewDuration('')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '新增失敗')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="border border-gray-200 rounded-lg p-4 space-y-3 bg-surface-2">
-      <p className="text-sm font-medium text-gray-700">新增劇本版本</p>
-
-      {/* Script search */}
-      <div ref={containerRef} className="relative">
-        <input
-          type="text"
-          value={query}
-          onChange={e => handleSearch(e.target.value)}
-          onFocus={() => results.length > 0 && setDropdownOpen(true)}
-          placeholder="搜尋現有劇本..."
-          disabled={showNew}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-40"
-        />
-        {searching && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">搜尋中...</span>}
-        {dropdownOpen && (
-          <div className="absolute z-10 w-full mt-1 bg-surface-2 border border-gray-200 rounded-md shadow-md overflow-hidden">
-            {results.length === 0 ? (
-              <div className="px-4 py-3 space-y-2">
-                <p className="text-sm text-gray-400">找不到符合的劇本</p>
-                <button type="button" onClick={() => { setShowNew(true); setDropdownOpen(false) }}
-                  className="text-sm text-brand hover:text-brand-hover">
-                  + 新增全新劇本
-                </button>
-              </div>
-            ) : (
-              <ul className="max-h-48 overflow-y-auto divide-y divide-gray-100">
-                {results.map(s => (
-                  <li key={s.id}>
-                    <button type="button" onClick={() => selectScript(s)}
-                      className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2">
-                      <span className="font-medium text-gray-900">{s.title}</span>
-                      <span className="text-xs text-gray-400">{DIFFICULTY_LABELS[s.difficulty]}</span>
-                    </button>
-                  </li>
-                ))}
-                <li>
-                  <button type="button" onClick={() => { setShowNew(true); setDropdownOpen(false) }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-brand hover:bg-gray-50">
-                    + 新增全新劇本
-                  </button>
-                </li>
-              </ul>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* New script fields */}
-      {showNew && (
-        <div className="space-y-3 border border-brand/20 rounded-md p-3 bg-brand/5">
-          <p className="text-xs text-brand font-medium">新劇本（將送交 admin 審核）</p>
-          <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)}
-            placeholder="劇本名稱" required
-            className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-          <select value={newDifficulty} onChange={e => setNewDifficulty(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
-            <option value="easy">入門</option>
-            <option value="medium">進階</option>
-            <option value="hard">燒腦</option>
-          </select>
-          <div className="grid grid-cols-3 gap-2">
-            {([['男生名額', newMale, setNewMale], ['女生名額', newFemale, setNewFemale], ['不限名額', newAny, setNewAny]] as const).map(([label, val, setter]) => (
-              <div key={label}>
-                <label className="text-xs text-gray-500 mb-0.5 block">{label}</label>
-                <input type="number" min={0} value={val} onChange={e => setter(Number(e.target.value))}
-                  className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {GENRES.map(([val, label]) => (
-              <button key={val} type="button"
-                onClick={() => setNewGenres(g => g.includes(val) ? g.filter(v => v !== val) : [...g, val])}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${newGenres.includes(val) ? 'bg-brand text-white border-brand' : 'border-gray-300 text-gray-600 hover:border-gray-400'}`}>
-                {label}
-              </button>
-            ))}
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 mb-0.5 block">時長（小時）</label>
-            <input type="number" min={1} value={newDuration} onChange={e => setNewDuration(e.target.value)} required
-              className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-          </div>
-          <button type="button" onClick={() => { setShowNew(false); setQuery('') }}
-            className="text-xs text-gray-400 hover:text-gray-600">取消，改搜尋現有劇本</button>
-        </div>
-      )}
-
-      {/* Common fields */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="text-xs text-gray-500 mb-0.5 block">定價（必填）</label>
-          <input type="number" min={0} value={price} onChange={e => setPrice(e.target.value)} required
-            className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-        </div>
-        {!showNew && (
-          <div>
-            <label className="text-xs text-gray-500 mb-0.5 block">時長（選填，小時）</label>
-            <input type="number" min={1} value={durationOverride} onChange={e => setDurationOverride(e.target.value)}
-              placeholder={selected?.duration != null ? `留空則同劇本（${selected.duration} 小時）` : '留空則沿用劇本預設'}
-              className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-          </div>
-        )}
-      </div>
-      <div>
-        <label className="text-xs text-gray-500 mb-0.5 block">版本名稱（選填）</label>
-        <input type="text" value={versionName} onChange={e => setVersionName(e.target.value)}
-          placeholder="如：標準版、體驗版"
-          className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-      </div>
-
-      {error && <p className="text-sm text-red-600">{error}</p>}
-
-      <button type="submit" disabled={submitting}
-        className="w-full bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-hover disabled:opacity-50">
-        {submitting ? '新增中...' : '新增'}
-      </button>
-    </form>
-  )
+interface EditDraft {
+  price: string;
+  duration_override: string;
+  version_name: string;
+  npc_count: string;
+  gm_count: string;
+  has_food: boolean;
+  has_costume_change: boolean;
 }
 
-// ── Main page ────────────────────────────────────────────────────────────────
+function versionToEditDraft(v: StoreScriptVersion): EditDraft {
+  return {
+    price: v.price != null ? String(v.price) : "",
+    duration_override: v.duration_override != null ? String(v.duration_override) : "",
+    version_name: v.version_name ?? "",
+    npc_count: v.npc_count != null ? String(v.npc_count) : "",
+    gm_count: v.gm_count != null ? String(v.gm_count) : "",
+    has_food: v.has_food ?? false,
+    has_costume_change: v.has_costume_change ?? false,
+  };
+}
 
 export default function StoreScriptVersionsPage() {
-  const { id } = useParams<{ id: string }>()
-  const storeId = Number(id)
-  const [versions, setVersions] = useState<StoreScriptVersion[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showAdd, setShowAdd] = useState(false)
+  const { id } = useParams<{ id: string }>();
+  const storeId = Number(id);
+  const navigate = useNavigate();
+  const [versions, setVersions] = useState<StoreScriptVersion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    getStoreScriptVersions(storeId).then(setVersions).finally(() => setLoading(false))
-  }, [storeId])
+    getStoreScriptVersions(storeId)
+      .then(setVersions)
+      .finally(() => setLoading(false));
+  }, [storeId]);
 
   async function toggleAvailable(v: StoreScriptVersion) {
-    const updated = await updateStoreScriptVersion(storeId, v.id, { available: !v.available })
-    setVersions(vs => vs.map(x => x.id === updated.id ? updated : x))
+    const updated = await updateStoreScriptVersion(storeId, v.id, {
+      available: !v.available,
+    });
+    setVersions((vs) => vs.map((x) => (x.id === updated.id ? updated : x)));
+  }
+
+  function startEdit(v: StoreScriptVersion) {
+    setEditingId(v.id);
+    setEditDraft(versionToEditDraft(v));
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditDraft(null);
+  }
+
+  async function saveEdit(versionId: number) {
+    if (!editDraft) return;
+    setSaving(true);
+    try {
+      const updated = await updateStoreScriptVersion(storeId, versionId, {
+        price: editDraft.price ? parseFloat(editDraft.price) : null,
+        duration_override: editDraft.duration_override
+          ? parseFloat(editDraft.duration_override)
+          : null,
+        version_name: editDraft.version_name || null,
+        npc_count: editDraft.npc_count ? parseInt(editDraft.npc_count) : null,
+        gm_count: editDraft.gm_count ? parseInt(editDraft.gm_count) : null,
+        has_food: editDraft.has_food || null,
+        has_costume_change: editDraft.has_costume_change || null,
+      });
+      setVersions((vs) => vs.map((x) => (x.id === updated.id ? updated : x)));
+      cancelEdit();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(versionId: number) {
+    if (!confirm("確定要刪除此劇本版本？")) return;
+    await deleteStoreScriptVersion(storeId, versionId);
+    setVersions((vs) => vs.filter((x) => x.id !== versionId));
+    if (editingId === versionId) cancelEdit();
   }
 
   function handleAdded(v: StoreScriptVersion) {
-    setVersions(vs => [...vs, v])
-    setShowAdd(false)
+    setVersions((vs) => [...vs, v]);
+    setShowAdd(false);
   }
 
   return (
     <div className="max-w-2xl">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">劇本版本</h1>
-        <button onClick={() => setShowAdd(s => !s)}
-          className="text-sm bg-brand text-white px-4 py-2 rounded-md hover:bg-brand-hover">
-          {showAdd ? '取消' : '新增劇本'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate(`/stores/${id}/script_versions/import`)}
+            className="text-sm border border-gray-300 text-gray-600 px-4 py-2 rounded-md hover:bg-gray-50"
+          >
+            批量匯入
+          </button>
+          <button
+            onClick={() => setShowAdd((s) => !s)}
+            className="text-sm bg-brand text-white px-4 py-2 rounded-md hover:bg-brand-hover"
+          >
+            {showAdd ? "取消" : "新增劇本"}
+          </button>
+        </div>
       </div>
 
-      {showAdd && <div className="mb-6"><AddForm storeId={storeId} onAdded={handleAdded} /></div>}
+      {showAdd && (
+        <div className="mb-6">
+          <AddVersionForm storeId={storeId} onAdded={handleAdded} />
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center text-gray-400 py-16">載入中...</div>
@@ -276,33 +128,135 @@ export default function StoreScriptVersionsPage() {
         <div className="text-center text-gray-400 py-16">尚未上架任何劇本</div>
       ) : (
         <div className="bg-surface border border-gray-200 rounded-lg divide-y divide-gray-100 overflow-hidden">
-          {versions.map(v => (
-            <div key={v.id} className="flex items-center gap-4 px-5 py-4">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <p className="text-sm font-medium text-gray-900 truncate">{v.script.title}</p>
-                  {v.version_name && <span className="text-xs text-gray-400">（{v.version_name}）</span>}
-                  {v.script.status === 'pending' && (
-                    <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">待審核</span>
+          {versions.map((v) => (
+            <div key={v.id}>
+              <div className="flex items-center gap-4 px-5 py-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {v.script.title}
+                    </p>
+                    {v.version_name && (
+                      <span className="text-xs text-gray-400">
+                        （{v.version_name}）
+                      </span>
+                    )}
+                    {v.script.status === "pending" && (
+                      <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">
+                        待審核
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    <span
+                      className={`text-xs px-1.5 py-0.5 rounded-full font-medium mr-1.5 ${DIFFICULTY_COLORS[v.script.difficulty as keyof typeof DIFFICULTY_COLORS]}`}
+                    >
+                      {DIFFICULTY_LABELS[v.script.difficulty as keyof typeof DIFFICULTY_LABELS]}
+                    </span>
+                    {v.script.total_slots} 人
+                    {v.price != null && ` · $${v.price}`}
+                    {v.duration_override && ` · ${v.duration_override} 小時`}
+                  </p>
+                  {(v.npc_count || v.gm_count || v.has_food || v.has_costume_change) && (
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      {v.npc_count ? <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">NPC ×{v.npc_count}</span> : null}
+                      {v.gm_count ? <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">GM ×{v.gm_count}</span> : null}
+                      {v.has_food && <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">附餐飲</span>}
+                      {v.has_costume_change && <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">換裝</span>}
+                    </div>
                   )}
                 </div>
-                <p className="text-xs text-gray-400">
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium mr-1.5 ${DIFFICULTY_COLORS[v.script.difficulty as keyof typeof DIFFICULTY_COLORS]}`}>
-                    {DIFFICULTY_LABELS[v.script.difficulty as keyof typeof DIFFICULTY_LABELS]}
-                  </span>
-                  {v.script.total_slots} 人
-                  {v.price != null && ` · $${v.price}`}
-                  {v.duration_override && ` · ${v.duration_override} 小時`}
-                </p>
+                <button
+                  type="button"
+                  onClick={() => editingId === v.id ? cancelEdit() : startEdit(v)}
+                  className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1"
+                >
+                  {editingId === v.id ? "取消" : "編輯"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleAvailable(v)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${v.available ? "bg-brand" : "bg-gray-200"}`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${v.available ? "translate-x-6" : "translate-x-1"}`}
+                  />
+                </button>
               </div>
-              <button type="button" onClick={() => toggleAvailable(v)}
-                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${v.available ? 'bg-brand' : 'bg-gray-200'}`}>
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${v.available ? 'translate-x-6' : 'translate-x-1'}`} />
-              </button>
+
+              {editingId === v.id && editDraft && (
+                <div className="px-5 pb-4 border-t border-gray-100 pt-3 space-y-3 bg-gray-50">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-gray-500 mb-0.5 block">定價</label>
+                      <input type="number" min={0} value={editDraft.price}
+                        onChange={(e) => setEditDraft({ ...editDraft, price: e.target.value })}
+                        className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 mb-0.5 block">時長（小時）</label>
+                      <input type="number" min={1} value={editDraft.duration_override}
+                        onChange={(e) => setEditDraft({ ...editDraft, duration_override: e.target.value })}
+                        className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 mb-0.5 block">版本名稱</label>
+                      <input type="text" value={editDraft.version_name}
+                        onChange={(e) => setEditDraft({ ...editDraft, version_name: e.target.value })}
+                        className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs text-gray-500 mb-0.5 block">NPC 數</label>
+                        <input type="number" min={0} value={editDraft.npc_count}
+                          onChange={(e) => setEditDraft({ ...editDraft, npc_count: e.target.value })}
+                          className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500 mb-0.5 block">GM 數</label>
+                        <input type="number" min={0} value={editDraft.gm_count}
+                          onChange={(e) => setEditDraft({ ...editDraft, gm_count: e.target.value })}
+                          className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                      <input type="checkbox" checked={editDraft.has_food}
+                        onChange={(e) => setEditDraft({ ...editDraft, has_food: e.target.checked })}
+                        className="rounded" />
+                      附餐飲
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                      <input type="checkbox" checked={editDraft.has_costume_change}
+                        onChange={(e) => setEditDraft({ ...editDraft, has_costume_change: e.target.checked })}
+                        className="rounded" />
+                      換裝
+                    </label>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => saveEdit(v.id)}
+                      disabled={saving}
+                      className="bg-brand text-white text-sm px-4 py-1.5 rounded-md hover:bg-brand-hover disabled:opacity-50"
+                    >
+                      {saving ? "儲存中..." : "儲存"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(v.id)}
+                      className="text-xs text-red-400 hover:text-red-600"
+                    >
+                      刪除此版本
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -14,9 +14,8 @@ function makeScript(overrides: Partial<Script> = {}): Script {
   return {
     id: 1,
     title: "月夜謀殺案",
-    genres: ["推理"],
+    genres: [0],
     difficulty: "medium",
-    difficulty_label: "進階",
     male_slots: 3,
     female_slots: 2,
     any_slots: 1,
@@ -24,6 +23,7 @@ function makeScript(overrides: Partial<Script> = {}): Script {
     description: "一個黑暗的夜晚…",
     status: "approved",
     duration: null,
+    publisher: null,
     cover_image_url: null,
     ...overrides,
   };
@@ -103,7 +103,7 @@ describe("ScriptsPage – slot format", () => {
   });
 
   it("renders script title and difficulty label", async () => {
-    mockScripts = [makeScript({ title: "死亡列車", difficulty_label: "進階" })];
+    mockScripts = [makeScript({ title: "死亡列車" })];
     renderPage();
 
     expect(await screen.findByText("死亡列車")).toBeInTheDocument();
@@ -112,7 +112,7 @@ describe("ScriptsPage – slot format", () => {
   });
 
   it("renders genre tags", async () => {
-    mockScripts = [makeScript({ genres: ["推理", "恐怖"] })];
+    mockScripts = [makeScript({ genres: [0, 2] })];
     renderPage();
 
     await screen.findByText("推理");

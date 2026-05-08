@@ -22,7 +22,8 @@ export function getEvent(id: number) {
 
 type CreateEventData = {
   scheduled_at: string;
-  location: string;
+  location?: string | null;
+  address_id?: number | null;
   host_in_game: boolean;
   host_cross_gender: boolean;
   allow_cross_gender: boolean;
@@ -42,7 +43,8 @@ export function updateEvent(
   data: Partial<{
     script_version_id: number;
     scheduled_at: string;
-    location: string;
+    location: string | null;
+    address_id: number | null;
     status: string;
     offline_male: number;
     offline_female: number;
