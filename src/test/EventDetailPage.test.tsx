@@ -105,6 +105,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
     offline_female: 0,
     scheduled_at: "2025-06-01T14:00:00Z",
     location: "台北",
+    address: null,
     status: "recruiting",
     confirmed_count: 0,
     available_slots: 6,

@@ -23,6 +23,7 @@ function makeScript(overrides: Partial<Script> = {}): Script {
     description: "一個黑暗的夜晚…",
     status: "approved",
     duration: null,
+    publisher: null,
     cover_image_url: null,
     ...overrides,
   };
