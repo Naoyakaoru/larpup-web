@@ -12,7 +12,8 @@ import { createEvent } from "../api/events";
 import { useAuth } from "../contexts/AuthContext";
 import { calcNeeded, canAddOffline, formatNeeded } from "../utils/slotCalc";
 import { DIFFICULTY_LABELS } from "../utils/labels";
-import type { Script } from "../types";
+import type { Address, Script } from "../types";
+import AddressPicker from "../components/AddressPicker";
 
 export default function CreateEventPage() {
   const { user } = useAuth();
@@ -42,6 +43,7 @@ export default function CreateEventPage() {
     null,
   );
 
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [form, setForm] = useState({
     location: "",
     host_in_game: true,
@@ -55,13 +57,17 @@ export default function CreateEventPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    getScripts().then(setScripts);
-  }, []);
-
-  useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(scriptSearch), 500);
     return () => clearTimeout(t);
   }, [scriptSearch]);
+
+  useEffect(() => {
+    if (!debouncedSearch) {
+      setScripts([]);
+      return;
+    }
+    getScripts({ q: debouncedSearch }).then(setScripts);
+  }, [debouncedSearch]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -74,11 +80,7 @@ export default function CreateEventPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const filteredScripts = debouncedSearch
-    ? scripts.filter((s) =>
-        s.title.toLowerCase().includes(debouncedSearch.toLowerCase()),
-      )
-    : scripts;
+  const filteredScripts = scripts;
 
   function selectScript(script: Script) {
     setSelectedScript(script);
@@ -128,6 +130,10 @@ export default function CreateEventPage() {
       setError("請選擇劇本");
       return;
     }
+    if (!selectedAddress && !form.location.trim()) {
+      setError("請選擇場館或填入地點");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
@@ -142,7 +148,8 @@ export default function CreateEventPage() {
       const event = await createEvent({
         ...versionParam,
         scheduled_at: scheduledAt.toISOString(),
-        location: form.location,
+        address_id: selectedAddress?.id ?? null,
+        location: selectedAddress ? null : form.location,
         host_in_game: form.host_in_game,
         host_cross_gender: form.host_cross_gender,
         allow_cross_gender: form.allow_cross_gender,
@@ -494,18 +501,29 @@ export default function CreateEventPage() {
         </div>
 
         {/* ── 地點 ── */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
             地點
           </label>
-          <input
-            type="text"
-            value={form.location}
-            onChange={set("location")}
-            required
-            placeholder="例：台北市信義區 / 謎境劇本殺台北店"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+          <AddressPicker
+            value={selectedAddress}
+            onChange={setSelectedAddress}
+            versionId={
+              scriptVersionId
+                ? Number(scriptVersionId)
+                : selectedVersion?.id
+            }
+            placeholder="搜尋已建立場館…"
           />
+          {!selectedAddress && (
+            <input
+              type="text"
+              value={form.location}
+              onChange={set("location")}
+              placeholder="或直接填入地址 / Google Maps 連結"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+            />
+          )}
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

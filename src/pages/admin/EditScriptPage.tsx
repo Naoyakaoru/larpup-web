@@ -1,6 +1,6 @@
 import { useState, useEffect, type ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getScript, updateScript } from "../../api/scripts";
+import { getScript, updateScript, adminDeleteScript } from "../../api/scripts";
 import type { Script } from "../../types";
 import { GENRES, DIFFICULTY_OPTIONS } from "../../utils/labels";
 
@@ -56,6 +56,16 @@ export default function EditScriptPage() {
     setGenres((g) =>
       g.includes(value) ? g.filter((v) => v !== value) : [...g, value],
     );
+  }
+
+  async function handleDelete() {
+    if (!window.confirm(`確定要刪除「${script!.title}」？此操作不可復原。`)) return;
+    try {
+      await adminDeleteScript(Number(id));
+      navigate("/admin/scripts");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "刪除失敗");
+    }
   }
 
   async function handleSubmit(e: { preventDefault(): void }) {
@@ -229,6 +239,15 @@ export default function EditScriptPage() {
             className="px-4 py-2 rounded-md text-sm text-gray-500 border border-gray-300 hover:bg-gray-50"
           >
             取消
+          </button>
+        </div>
+        <div className="pt-2 border-t border-gray-100">
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="text-sm text-red-500 hover:text-red-700"
+          >
+            刪除此劇本
           </button>
         </div>
       </form>

@@ -1,16 +1,12 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { bulkImportScripts, type BulkImportRow } from "../../api/scripts";
-import {
-  DIFFICULTY_OPTIONS,
-  GENRE_LABELS,
-  GENRE_BY_LABEL,
-} from "../../utils/labels";
+import { DIFFICULTY_OPTIONS, GENRE_LABELS, GENRES } from "../../utils/labels";
 
 // ── CSV parsing ────────────────────────────────────────────────────────────────
 
 function parseCSV(text: string): Record<string, string>[] {
-  const allRows = splitCSVRows(text);
+  const allRows = parseCSVRows(text);
   if (allRows.length < 2) return [];
   const headers = allRows[0];
   return allRows.slice(1).map((vals) => {
@@ -22,88 +18,141 @@ function parseCSV(text: string): Record<string, string>[] {
   });
 }
 
-function splitCSVRows(text: string): string[][] {
+function parseCSVRows(text: string): string[][] {
   const rows: string[][] = [];
+  let fields: string[] = [];
   let cur = "";
   let inQuote = false;
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
-    if (ch === '"') {
-      if (inQuote && text[i + 1] === '"') {
-        cur += '"';
-        i++;
-      } else inQuote = !inQuote;
-    } else if ((ch === "\r" || ch === "\n") && !inQuote) {
-      if (ch === "\r" && text[i + 1] === "\n") i++;
-      if (cur.trim() || rows.length > 0) rows.push(splitCSVRow(cur));
-      cur = "";
+    if (inQuote) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuote = false;
+        }
+      } else {
+        cur += ch;
+      }
     } else {
-      cur += ch;
+      if (ch === '"') {
+        inQuote = true;
+      } else if (ch === ",") {
+        fields.push(cur);
+        cur = "";
+      } else if (ch === "\n" || ch === "\r") {
+        if (ch === "\r" && text[i + 1] === "\n") i++;
+        fields.push(cur);
+        cur = "";
+        if (fields.some((f) => f !== "") || rows.length > 0) rows.push(fields);
+        fields = [];
+      } else {
+        cur += ch;
+      }
     }
   }
-  if (cur.trim()) rows.push(splitCSVRow(cur));
+  fields.push(cur);
+  if (fields.some((f) => f !== "")) rows.push(fields);
   return rows;
 }
 
-function splitCSVRow(line: string): string[] {
-  const result: string[] = [];
-  let cur = "";
-  let inQuote = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      if (inQuote && line[i + 1] === '"') {
-        cur += '"';
-        i++;
-      } else inQuote = !inQuote;
-    } else if (ch === "," && !inQuote) {
-      result.push(cur);
-      cur = "";
-    } else {
-      cur += ch;
+// ── Genre picker ───────────────────────────────────────────────────────────────
+
+function GenrePicker({
+  ids,
+  onChange,
+}: {
+  ids: number[];
+  onChange: (ids: number[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  function toggle(id: number) {
+    onChange(ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]);
   }
-  result.push(cur);
-  return result;
+
+  return (
+    <div ref={ref} className="relative">
+      <div
+        onClick={() => setOpen((v) => !v)}
+        className="min-h-[28px] flex flex-wrap gap-1 cursor-pointer rounded px-1 py-1 hover:ring-1 hover:ring-brand"
+      >
+        {ids.length === 0 ? (
+          <span className="text-gray-400 text-xs">選擇類型</span>
+        ) : (
+          ids.map((id) => (
+            <span
+              key={id}
+              className="inline-flex items-center bg-brand/10 text-brand text-xs px-1.5 rounded"
+            >
+              {GENRE_LABELS[id]}
+            </span>
+          ))
+        )}
+      </div>
+      {open && (
+        <div className="absolute z-20 top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 grid grid-cols-3 gap-x-3 gap-y-1 min-w-[200px]">
+          {GENRES.map(([id, label]) => (
+            <label
+              key={id}
+              className="flex items-center gap-1 text-xs cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={ids.includes(id)}
+                onChange={() => toggle(id)}
+                className="rounded"
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── Data mapping ───────────────────────────────────────────────────────────────
 
-function parseGenresNorm(raw: string): number[] {
-  return raw
-    .split(",")
-    .map((s) => parseInt(s.trim(), 10))
-    .filter((n) => !isNaN(n));
-}
-
-function genresToDisplay(ids: number[]): string {
-  return ids
-    .map((id) => GENRE_LABELS[id] ?? "")
-    .filter(Boolean)
-    .join("、");
-}
-
-function displayToGenres(text: string): number[] {
-  return text
-    .split(/[、,，\s]+/)
-    .map((s) => GENRE_BY_LABEL[s.trim()])
-    .filter((n) => n !== undefined);
-}
-
 interface Row extends BulkImportRow {
   _key: number;
   _include: boolean;
-  _genreText: string; // display string for editing
+  _rating: string;
+  _wish_count: string;
+  _has_cover: boolean;
 }
 
 function csvRowToRow(raw: Record<string, string>, key: number): Row {
   const diff =
     (raw["difficulty_norm"] as BulkImportRow["difficulty"]) || "medium";
-  const genreIds = parseGenresNorm(raw["genres_norm"] || "");
+  const genreIds = (raw["genres_norm"] || "")
+    .split(",")
+    .map((s) => parseInt(s.trim(), 10))
+    .filter((n) => !isNaN(n));
   return {
     _key: key,
     _include: true,
-    _genreText: genresToDisplay(genreIds),
+    _rating: raw["rating"] && raw["rating"] !== "None" ? raw["rating"] : "",
+    _wish_count:
+      raw["wish_count"] && raw["wish_count"] !== "None"
+        ? raw["wish_count"]
+        : "",
+    qiandao_id: raw["id"] || null,
+    rating:
+      raw["rating"] && raw["rating"] !== "None" ? raw["rating"] : null,
     title: raw["title"] || "",
     difficulty: diff,
     genres: genreIds,
@@ -115,8 +164,11 @@ function csvRowToRow(raw: Record<string, string>, key: number): Row {
       : null,
     description: (raw["description"] || "").replace(/\\n/g, "\n"),
     publisher: raw["publisher"] || null,
+    cover_image_id: raw["cover_image_id"] || null,
+    _has_cover: !!raw["cover_image_id"],
   };
 }
+
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
@@ -148,15 +200,6 @@ export default function ImportScriptsPage() {
     setRows((rs) => rs.map((r) => (r._key === key ? { ...r, ...patch } : r)));
   }
 
-  function updateGenreText(key: number, text: string) {
-    const ids = displayToGenres(text);
-    setRows((rs) =>
-      rs.map((r) =>
-        r._key === key ? { ...r, _genreText: text, genres: ids } : r,
-      ),
-    );
-  }
-
   function toggleAll(checked: boolean) {
     setRows((rs) => rs.map((r) => ({ ...r, _include: checked })));
   }
@@ -168,6 +211,9 @@ export default function ImportScriptsPage() {
     setImporting(true);
     try {
       const payload = included.map((r) => ({
+        qiandao_id: r.qiandao_id,
+        rating: r.rating,
+        cover_image_id: r.cover_image_id,
         title: r.title,
         difficulty: r.difficulty,
         genres: r.genres,
@@ -283,29 +329,35 @@ export default function ImportScriptsPage() {
                   <th className="px-3 py-2 text-left font-medium text-gray-600 min-w-[180px]">
                     劇本名稱
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600 w-28">
+                  <th className="px-3 py-2 text-left font-medium text-gray-400 w-16 text-xs">
+                    評分
+                  </th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-400 w-16 text-xs">
+                    收藏
+                  </th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-400 w-28 text-xs">
                     發行商
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600 w-28">
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 w-24">
                     難度
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600 min-w-[160px]">
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 min-w-[180px]">
                     類型
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600 w-20">
+                  <th className="px-3 py-2 text-left font-medium text-gray-400 w-16 text-xs">
                     男
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600 w-20">
+                  <th className="px-3 py-2 text-left font-medium text-gray-400 w-16 text-xs">
                     女
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600 w-20">
+                  <th className="px-3 py-2 text-left font-medium text-gray-400 w-16 text-xs">
                     任意
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600 w-20">
+                  <th className="px-3 py-2 text-left font-medium text-gray-400 w-20 text-xs">
                     時長(h)
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600 min-w-[200px]">
-                    介紹
+                  <th className="px-3 py-2 text-center font-medium text-gray-400 w-10 text-xs">
+                    圖
                   </th>
                 </tr>
               </thead>
@@ -325,17 +377,14 @@ export default function ImportScriptsPage() {
                         className="rounded"
                       />
                     </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.title}
-                        onChange={(e) =>
-                          update(row._key, { title: e.target.value })
-                        }
-                        className="w-full border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand rounded px-1 py-0.5"
-                      />
+                    <td className="px-3 py-2 text-sm">{row.title}</td>
+                    <td className="px-3 py-2 text-xs text-gray-400">
+                      {row._rating || "—"}
                     </td>
-                    <td className="px-3 py-2 text-xs text-gray-500 whitespace-nowrap">
+                    <td className="px-3 py-2 text-xs text-gray-400">
+                      {row._wish_count || "—"}
+                    </td>
+                    <td className="px-3 py-2 text-xs text-gray-400">
                       {row.publisher || "—"}
                     </td>
                     <td className="px-3 py-2">
@@ -357,79 +406,25 @@ export default function ImportScriptsPage() {
                       </select>
                     </td>
                     <td className="px-3 py-2">
-                      <input
-                        type="text"
-                        value={row._genreText}
-                        onChange={(e) =>
-                          updateGenreText(row._key, e.target.value)
-                        }
-                        placeholder="推理、情感…"
-                        className="w-full border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand rounded px-1 py-0.5"
+                      <GenrePicker
+                        ids={row.genres}
+                        onChange={(ids) => update(row._key, { genres: ids })}
                       />
                     </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="number"
-                        value={row.male_slots}
-                        min={0}
-                        onChange={(e) =>
-                          update(row._key, {
-                            male_slots: parseInt(e.target.value, 10) || 0,
-                          })
-                        }
-                        className="w-full border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand rounded px-1 py-0.5"
-                      />
+                    <td className="px-3 py-2 text-xs text-gray-400">
+                      {row.male_slots || "—"}
                     </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="number"
-                        value={row.female_slots}
-                        min={0}
-                        onChange={(e) =>
-                          update(row._key, {
-                            female_slots: parseInt(e.target.value, 10) || 0,
-                          })
-                        }
-                        className="w-full border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand rounded px-1 py-0.5"
-                      />
+                    <td className="px-3 py-2 text-xs text-gray-400">
+                      {row.female_slots || "—"}
                     </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="number"
-                        value={row.any_slots}
-                        min={0}
-                        onChange={(e) =>
-                          update(row._key, {
-                            any_slots: parseInt(e.target.value, 10) || 0,
-                          })
-                        }
-                        className="w-full border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand rounded px-1 py-0.5"
-                      />
+                    <td className="px-3 py-2 text-xs text-gray-400">
+                      {row.any_slots || "—"}
                     </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="number"
-                        value={row.duration ?? ""}
-                        min={1}
-                        onChange={(e) =>
-                          update(row._key, {
-                            duration: e.target.value
-                              ? parseInt(e.target.value, 10)
-                              : null,
-                          })
-                        }
-                        className="w-full border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand rounded px-1 py-0.5"
-                      />
+                    <td className="px-3 py-2 text-xs text-gray-400">
+                      {row.duration ?? "—"}
                     </td>
-                    <td className="px-3 py-2">
-                      <textarea
-                        value={row.description}
-                        rows={2}
-                        onChange={(e) =>
-                          update(row._key, { description: e.target.value })
-                        }
-                        className="w-full border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand rounded px-1 py-0.5 resize-none text-xs"
-                      />
+                    <td className="px-3 py-2 text-center text-green-500 text-xs">
+                      {row._has_cover ? "✓" : ""}
                     </td>
                   </tr>
                 ))}

@@ -15,7 +15,9 @@ import {
 import { getScriptVersions, type ScriptVersion } from "../api/scripts";
 import { useAuth } from "../contexts/AuthContext";
 import { calcRemainingAfterOnline, canAddOffline } from "../utils/slotCalc";
-import type { Event } from "../types";
+import type { Address, Event } from "../types";
+import AddressPicker from "../components/AddressPicker";
+import EventLocation from "../components/EventLocation";
 
 import {
   DIFFICULTY_COLORS,
@@ -25,6 +27,7 @@ import {
   EVENT_STATUS_COLORS as STATUS_COLORS,
   MEMBER_STATUS_LABELS,
 } from "../utils/labels";
+
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString("zh-TW", {
@@ -51,6 +54,7 @@ export default function EventDetailPage() {
     allow_cross_gender: false,
   });
   const [editScheduledAt, setEditScheduledAt] = useState<Date | null>(null);
+  const [editAddress, setEditAddress] = useState<Address | null>(null);
   const [editVersions, setEditVersions] = useState<ScriptVersion[]>([]);
   const [editScriptVersionId, setEditScriptVersionId] = useState<number | null>(
     null,
@@ -112,8 +116,9 @@ export default function EventDetailPage() {
   }
 
   function startEdit() {
+    setEditAddress(event!.address ?? null);
     setEditForm({
-      location: event!.location,
+      location: event!.location ?? "",
       offline_male: event!.offline_male,
       offline_female: event!.offline_female,
       allow_cross_gender: event!.allow_cross_gender,
@@ -137,13 +142,15 @@ export default function EventDetailPage() {
       );
       const data: Partial<{
         script_version_id: number;
-        location: string;
+        location: string | null;
+        address_id: number | null;
         scheduled_at: string;
         offline_male: number;
         offline_female: number;
         allow_cross_gender: boolean;
       }> = {
-        location: editForm.location,
+        address_id: editAddress?.id ?? null,
+        location: editAddress ? null : editForm.location,
         offline_male: editForm.offline_male,
         offline_female: editForm.offline_female,
         allow_cross_gender: editForm.allow_cross_gender,
@@ -282,9 +289,11 @@ export default function EventDetailPage() {
             <dt className="text-gray-400">時間</dt>
             <dd className="text-gray-900">{formatDate(event.scheduled_at)}</dd>
           </div>
-          <div className="flex justify-between">
-            <dt className="text-gray-400">地點</dt>
-            <dd className="text-gray-900">{event.location}</dd>
+          <div className="flex justify-between gap-4">
+            <dt className="text-gray-400 shrink-0">地點</dt>
+            <dd className="text-gray-900 text-right">
+              <EventLocation address={event.address} location={event.location} />
+            </dd>
           </div>
           {!hostInGame && (
             <div className="flex justify-between">
@@ -311,17 +320,23 @@ export default function EventDetailPage() {
           <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
             {editing ? (
               <>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    地點
-                  </label>
-                  <input
-                    value={editForm.location}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, location: e.target.value }))
-                    }
-                    className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                <div className="space-y-1.5">
+                  <label className="block text-xs text-gray-500">地點</label>
+                  <AddressPicker
+                    value={editAddress}
+                    onChange={setEditAddress}
+                    versionId={event!.script_version_id}
                   />
+                  {!editAddress && (
+                    <input
+                      value={editForm.location}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, location: e.target.value }))
+                      }
+                      placeholder="或直接填入地址 / Google Maps 連結"
+                      className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                    />
+                  )}
                 </div>
                 {!event.members?.some((m) => m.user.id !== event.host.id) && (
                   <>
@@ -840,10 +855,10 @@ export default function EventDetailPage() {
                       <span className="font-medium">{log.user.nickname}</span>
                       {" 更改地點："}
                       <span className="line-through text-gray-400">
-                        {log.metadata.from}
+                        {String(log.metadata.from ?? "")}
                       </span>
                       {" → "}
-                      <span>{log.metadata.to}</span>
+                      <span>{String(log.metadata.to ?? "")}</span>
                     </>
                   )}
                 </span>

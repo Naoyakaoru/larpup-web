@@ -98,6 +98,9 @@ export default function AdminScriptsPage() {
                 <th className="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">
                   人數
                 </th>
+                <th className="text-center px-4 py-3 font-medium text-gray-400 text-xs w-8 hidden sm:table-cell">
+                  圖
+                </th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">
                   狀態
                 </th>
@@ -122,6 +125,9 @@ export default function AdminScriptsPage() {
                   </td>
                   <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">
                     {script.total_slots} 人
+                  </td>
+                  <td className="px-4 py-3 text-center text-green-500 text-xs hidden sm:table-cell">
+                    {script.cover_image_url ? "✓" : ""}
                   </td>
                   <td className="px-4 py-3">
                     <span

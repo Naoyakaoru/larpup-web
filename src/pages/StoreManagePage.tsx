@@ -1,354 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import {
-  getStoreScriptVersions,
-  updateStoreScriptVersion,
-  createStoreScriptVersion,
-} from "../api/stores";
+import { getStoreScriptVersions, updateStoreScriptVersion } from "../api/stores";
 import type { StoreScriptVersion } from "../api/stores";
-import { getScripts } from "../api/scripts";
-import type { Script } from "../types";
-import { DIFFICULTY_LABELS, GENRES } from "../utils/labels";
-import { useRef } from "react";
-
-function AddForm({
-  storeId,
-  onAdded,
-  onCancel,
-}: {
-  storeId: number;
-  onAdded: (v: StoreScriptVersion) => void;
-  onCancel: () => void;
-}) {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Script[]>([]);
-  const [selected, setSelected] = useState<Script | null>(null);
-  const [showNew, setShowNew] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [searching, setSearching] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const [price, setPrice] = useState("");
-  const [durationOverride, setDurationOverride] = useState("");
-  const [versionName, setVersionName] = useState("");
-
-  const [newTitle, setNewTitle] = useState("");
-  const [newDifficulty, setNewDifficulty] = useState("easy");
-  const [newMale, setNewMale] = useState(0);
-  const [newFemale, setNewFemale] = useState(0);
-  const [newAny, setNewAny] = useState(0);
-  const [newGenres, setNewGenres] = useState<number[]>([]);
-  const [newDuration, setNewDuration] = useState("");
-
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      )
-        setDropdownOpen(false);
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  function handleSearch(q: string) {
-    setQuery(q);
-    setSelected(null);
-    setShowNew(false);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!q.trim()) {
-      setResults([]);
-      setDropdownOpen(false);
-      return;
-    }
-    setSearching(true);
-    setDropdownOpen(true);
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const all = await getScripts();
-        setResults(all.filter((s) => s.title.includes(q)));
-      } finally {
-        setSearching(false);
-      }
-    }, 300);
-  }
-
-  function selectScript(s: Script) {
-    setSelected(s);
-    setQuery(s.title);
-    setDropdownOpen(false);
-    setShowNew(false);
-  }
-
-  async function handleSubmit(e: { preventDefault(): void }) {
-    e.preventDefault();
-    setError("");
-    setSubmitting(true);
-    try {
-      let version: StoreScriptVersion;
-      if (showNew) {
-        version = await createStoreScriptVersion(storeId, {
-          title: newTitle,
-          difficulty: newDifficulty,
-          male_slots: newMale,
-          female_slots: newFemale,
-          any_slots: newAny,
-          genres: newGenres,
-          duration_override: Number(newDuration),
-          price: Number(price),
-          version_name: versionName || undefined,
-        });
-      } else {
-        if (!selected) {
-          setError("請選擇劇本");
-          setSubmitting(false);
-          return;
-        }
-        version = await createStoreScriptVersion(storeId, {
-          script_id: selected.id,
-          price: Number(price),
-          duration_override: durationOverride
-            ? Number(durationOverride)
-            : undefined,
-          version_name: versionName || undefined,
-        });
-      }
-      onAdded(version);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "新增失敗");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="border border-gray-200 rounded-lg p-4 space-y-3 bg-surface-2"
-    >
-      <div ref={containerRef} className="relative">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => handleSearch(e.target.value)}
-          onFocus={() => results.length > 0 && setDropdownOpen(true)}
-          placeholder="搜尋現有劇本..."
-          disabled={showNew}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-40"
-        />
-        {searching && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-            搜尋中...
-          </span>
-        )}
-        {dropdownOpen && (
-          <div className="absolute z-10 w-full mt-1 bg-surface-2 border border-gray-200 rounded-md shadow-md overflow-hidden">
-            {results.length === 0 ? (
-              <div className="px-4 py-3 space-y-2">
-                <p className="text-sm text-gray-400">找不到符合的劇本</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowNew(true);
-                    setDropdownOpen(false);
-                  }}
-                  className="text-sm text-brand hover:text-brand-hover"
-                >
-                  + 新增全新劇本
-                </button>
-              </div>
-            ) : (
-              <ul className="max-h-48 overflow-y-auto divide-y divide-gray-100">
-                {results.map((s) => (
-                  <li key={s.id}>
-                    <button
-                      type="button"
-                      onClick={() => selectScript(s)}
-                      className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2"
-                    >
-                      <span className="font-medium text-gray-900">
-                        {s.title}
-                      </span>
-                      <span className="text-xs text-gray-400">
-                        {DIFFICULTY_LABELS[s.difficulty]}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowNew(true);
-                      setDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-brand hover:bg-gray-50"
-                  >
-                    + 新增全新劇本
-                  </button>
-                </li>
-              </ul>
-            )}
-          </div>
-        )}
-      </div>
-
-      {showNew && (
-        <div className="space-y-3 border border-brand/20 rounded-md p-3 bg-brand/5">
-          <p className="text-xs text-brand font-medium">
-            新劇本（將送交 admin 審核）
-          </p>
-          <input
-            type="text"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            placeholder="劇本名稱"
-            required
-            className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-          />
-          <select
-            value={newDifficulty}
-            onChange={(e) => setNewDifficulty(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-          >
-            {(["easy", "medium", "hard"] as const).map((d) => (
-              <option key={d} value={d}>
-                {DIFFICULTY_LABELS[d]}
-              </option>
-            ))}
-          </select>
-          <div className="grid grid-cols-3 gap-2">
-            {(
-              [
-                ["男生名額", newMale, setNewMale],
-                ["女生名額", newFemale, setNewFemale],
-                ["不限名額", newAny, setNewAny],
-              ] as const
-            ).map(([label, val, setter]) => (
-              <div key={label}>
-                <label className="text-xs text-gray-500 mb-0.5 block">
-                  {label}
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  value={val}
-                  onChange={(e) => setter(Number(e.target.value))}
-                  className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-                />
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {GENRES.map(([val, label]) => (
-              <button
-                key={val}
-                type="button"
-                onClick={() =>
-                  setNewGenres((g) =>
-                    g.includes(val) ? g.filter((v) => v !== val) : [...g, val],
-                  )
-                }
-                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${newGenres.includes(val) ? "bg-brand text-white border-brand" : "border-gray-300 text-gray-600 hover:border-gray-400"}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 mb-0.5 block">
-              時長（小時）
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={newDuration}
-              onChange={(e) => setNewDuration(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setShowNew(false);
-              setQuery("");
-            }}
-            className="text-xs text-gray-400 hover:text-gray-600"
-          >
-            取消，改搜尋現有劇本
-          </button>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="text-xs text-gray-500 mb-0.5 block">
-            定價（必填）
-          </label>
-          <input
-            type="number"
-            min={0}
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-          />
-        </div>
-        {!showNew && (
-          <div>
-            <label className="text-xs text-gray-500 mb-0.5 block">
-              時長 override（選填，小時）
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={durationOverride}
-              onChange={(e) => setDurationOverride(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-            />
-          </div>
-        )}
-      </div>
-      <div>
-        <label className="text-xs text-gray-500 mb-0.5 block">
-          版本名稱（選填）
-        </label>
-        <input
-          type="text"
-          value={versionName}
-          onChange={(e) => setVersionName(e.target.value)}
-          placeholder="如：標準版、體驗版"
-          className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-        />
-      </div>
-
-      {error && <p className="text-sm text-red-600">{error}</p>}
-
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="flex-1 bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-hover disabled:opacity-50"
-        >
-          {submitting ? "新增中..." : "新增"}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="text-sm text-gray-500 hover:text-gray-700 px-3"
-        >
-          取消
-        </button>
-      </div>
-    </form>
-  );
-}
+import { DIFFICULTY_LABELS, REGION_OPTIONS, REGION_LABELS } from "../utils/labels";
+import AddVersionForm from "../components/AddVersionForm";
+import AddressPicker from "../components/AddressPicker";
+import {
+  getStoreAddresses,
+  createAddress,
+  updateAddress,
+  linkAddressToStore,
+  unlinkAddressFromStore,
+} from "../api/addresses";
+import type { Address } from "../types";
 
 function ComingSoonSection({
   title,
@@ -372,11 +36,79 @@ export default function StoreManagePage() {
   const [loadingVersions, setLoadingVersions] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
 
+  // Addresses
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [showLinkPicker, setShowLinkPicker] = useState(false);
+  const [linkCandidate, setLinkCandidate] = useState<Address | null>(null);
+  const [showCreateAddress, setShowCreateAddress] = useState(false);
+  const [newAddr, setNewAddr] = useState<{ name: string; address: string; map_url: string; region: string }>({ name: "", address: "", map_url: "", region: REGION_OPTIONS[0].value });
+  const [addrError, setAddrError] = useState("");
+  const [editAddrId, setEditAddrId] = useState<number | null>(null);
+  const [editAddrForm, setEditAddrForm] = useState<{ name: string; address: string; map_url: string; region: string }>({ name: "", address: "", map_url: "", region: "" });
+
   useEffect(() => {
     getStoreScriptVersions(storeId)
       .then(setVersions)
       .finally(() => setLoadingVersions(false));
   }, [storeId]);
+
+  useEffect(() => {
+    getStoreAddresses(storeId).then(setAddresses);
+  }, [storeId]);
+
+  async function handleLinkAddress() {
+    if (!linkCandidate) return;
+    try {
+      await linkAddressToStore(storeId, linkCandidate.id);
+      setAddresses((prev) =>
+        prev.some((a) => a.id === linkCandidate.id) ? prev : [...prev, linkCandidate]
+      );
+      setLinkCandidate(null);
+      setShowLinkPicker(false);
+    } catch (err) {
+      setAddrError(err instanceof Error ? err.message : "連結失敗");
+    }
+  }
+
+  async function handleUpdateAddress(id: number) {
+    setAddrError("");
+    try {
+      const updated = await updateAddress(id, { name: editAddrForm.name });
+      setAddresses((prev) => prev.map((a) => (a.id === id ? updated : a)));
+      setEditAddrId(null);
+    } catch (err) {
+      setAddrError(err instanceof Error ? err.message : "儲存失敗");
+    }
+  }
+
+  async function handleUnlinkAddress(addressId: number) {
+    if (!window.confirm("確定要移除此場館與店家的關聯？")) return;
+    try {
+      await unlinkAddressFromStore(storeId, addressId);
+      setAddresses((prev) => prev.filter((a) => a.id !== addressId));
+    } catch (err) {
+      setAddrError(err instanceof Error ? err.message : "移除失敗");
+    }
+  }
+
+  async function handleCreateAddress(e: React.SyntheticEvent) {
+    e.preventDefault();
+    setAddrError("");
+    try {
+      const created = await createAddress({
+        name: newAddr.name,
+        address: newAddr.address || null,
+        map_url: newAddr.map_url || null,
+        region: newAddr.region,
+        store_id: storeId,
+      });
+      setAddresses((prev) => [...prev, created]);
+      setNewAddr({ name: "", address: "", map_url: "", region: REGION_OPTIONS[0].value });
+      setShowCreateAddress(false);
+    } catch (err) {
+      setAddrError(err instanceof Error ? err.message : "建立失敗");
+    }
+  }
 
   async function toggleAvailable(v: StoreScriptVersion) {
     const updated = await updateStoreScriptVersion(storeId, v.id, {
@@ -417,7 +149,7 @@ export default function StoreManagePage() {
 
           {showAdd && (
             <div className="mb-4">
-              <AddForm
+              <AddVersionForm
                 storeId={storeId}
                 onAdded={handleAdded}
                 onCancel={() => setShowAdd(false)}
@@ -431,7 +163,7 @@ export default function StoreManagePage() {
             <p className="text-sm text-gray-400">尚未上架任何劇本</p>
           ) : (
             <ul className="divide-y divide-gray-100">
-              {versions.slice(0, 5).map((v) => (
+              {versions.slice(0, 3).map((v) => (
                 <li
                   key={v.id}
                   className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
@@ -446,14 +178,18 @@ export default function StoreManagePage() {
                       )}
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      {
-                        DIFFICULTY_LABELS[
-                          v.script.difficulty as keyof typeof DIFFICULTY_LABELS
-                        ]
-                      }
+                      {DIFFICULTY_LABELS[v.script.difficulty as keyof typeof DIFFICULTY_LABELS]}
                       ・{v.script.total_slots} 人
                       {v.price != null && ` · $${v.price}`}
                     </p>
+                    {(v.npc_count || v.gm_count || v.has_food || v.has_costume_change) && (
+                      <div className="flex gap-1 mt-1 flex-wrap">
+                        {v.npc_count ? <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">NPC ×{v.npc_count}</span> : null}
+                        {v.gm_count ? <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">GM ×{v.gm_count}</span> : null}
+                        {v.has_food && <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">附餐飲</span>}
+                        {v.has_costume_change && <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">換裝</span>}
+                      </div>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -484,10 +220,133 @@ export default function StoreManagePage() {
           title="活動"
           description="查看與管理此店家的揪團活動"
         />
-        <ComingSoonSection
-          title="店家資訊"
-          description="編輯店家名稱、簡介等基本資料"
-        />
+        {/* 場館地址 */}
+        <section className="bg-surface border border-gray-200 rounded-lg p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-gray-700">場館地址</h2>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setShowCreateAddress((v) => !v); setShowLinkPicker(false); }}
+                className="text-sm border border-gray-300 text-gray-600 px-3 py-1 rounded-md hover:bg-gray-50"
+              >
+                {showCreateAddress ? "取消" : "新增地址"}
+              </button>
+              <button
+                onClick={() => { setShowLinkPicker((v) => !v); setShowCreateAddress(false); }}
+                className="text-sm bg-brand text-white px-3 py-1 rounded-md hover:bg-brand-hover"
+              >
+                {showLinkPicker ? "取消" : "連結現有"}
+              </button>
+            </div>
+          </div>
+
+          {showCreateAddress && (
+            <form onSubmit={handleCreateAddress} className="mb-4 space-y-3 bg-gray-50 rounded-lg p-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">場館名稱 *</label>
+                  <input
+                    value={newAddr.name}
+                    onChange={(e) => setNewAddr((f) => ({ ...f, name: e.target.value }))}
+                    required
+                    className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">地區 *</label>
+                  <select
+                    value={newAddr.region}
+                    onChange={(e) => setNewAddr((f) => ({ ...f, region: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                  >
+                    {REGION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">地址</label>
+                <input
+                  value={newAddr.address}
+                  onChange={(e) => setNewAddr((f) => ({ ...f, address: e.target.value }))}
+                  placeholder="完整地址（Google Maps 可搜尋）"
+                  className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Google Maps 連結</label>
+                <input
+                  value={newAddr.map_url}
+                  onChange={(e) => setNewAddr((f) => ({ ...f, map_url: e.target.value }))}
+                  placeholder="https://maps.google.com/..."
+                  className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                />
+              </div>
+              {addrError && <p className="text-xs text-red-600">{addrError}</p>}
+              <button type="submit" className="bg-brand text-white text-sm px-4 py-1.5 rounded-md hover:bg-brand-hover">
+                建立並加入
+              </button>
+            </form>
+          )}
+
+          {showLinkPicker && (
+            <div className="mb-4 flex gap-2 items-start">
+              <div className="flex-1">
+                <AddressPicker value={linkCandidate} onChange={setLinkCandidate} placeholder="搜尋已建立場館…" />
+              </div>
+              <button
+                onClick={handleLinkAddress}
+                disabled={!linkCandidate}
+                className="text-sm bg-brand text-white px-3 py-2 rounded-md hover:bg-brand-hover disabled:opacity-40 whitespace-nowrap"
+              >
+                加入
+              </button>
+            </div>
+          )}
+
+          {addresses.length === 0 ? (
+            <p className="text-sm text-gray-400">尚未設定場館地址</p>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {addresses.map((a) =>
+                editAddrId === a.id ? (
+                  <li key={a.id} className="py-3 first:pt-0 last:pb-0 flex items-center gap-2 bg-brand/5 px-2 rounded">
+                    <input
+                      value={editAddrForm.name}
+                      onChange={(e) => setEditAddrForm((f) => ({ ...f, name: e.target.value }))}
+                      placeholder="場館名稱"
+                      className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
+                    />
+                    <button onClick={() => handleUpdateAddress(a.id)} className="text-xs text-brand hover:text-brand-hover font-medium whitespace-nowrap">儲存</button>
+                    <button onClick={() => setEditAddrId(null)} className="text-xs text-gray-400 hover:text-gray-600">取消</button>
+                  </li>
+                ) : (
+                  <li key={a.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0 gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{a.name}</p>
+                      <p className="text-xs text-gray-400">{REGION_LABELS[a.region as keyof typeof REGION_LABELS] ?? a.region}{a.address ? `・${a.address}` : ""}</p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {a.map_url && (
+                        <a href={a.map_url} target="_blank" rel="noopener noreferrer" className="text-xs text-brand hover:underline">
+                          地圖
+                        </a>
+                      )}
+                      <button
+                        onClick={() => { setEditAddrId(a.id); setEditAddrForm({ name: a.name, address: a.address ?? "", map_url: a.map_url ?? "", region: a.region }); }}
+                        className="text-xs text-gray-500 hover:text-gray-700"
+                      >
+                        編輯
+                      </button>
+                      <button onClick={() => handleUnlinkAddress(a.id)} className="text-xs text-gray-400 hover:text-red-500">
+                        移除
+                      </button>
+                    </div>
+                  </li>
+                )
+              )}
+            </ul>
+          )}
+        </section>
         <ComingSoonSection
           title="成員與權限"
           description="管理可操作此店家的帳號與角色"

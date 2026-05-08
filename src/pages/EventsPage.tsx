@@ -8,6 +8,7 @@ import {
   GENRE_LABELS,
 } from "../utils/labels";
 import type { Event } from "../types";
+import EventLocation from "../components/EventLocation";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString("zh-TW", {
@@ -113,7 +114,7 @@ export default function EventsPage() {
                   </p>
                   <div className="text-sm text-gray-500 space-y-0.5">
                     <div>{formatDate(event.scheduled_at)}</div>
-                    <div>{event.location}</div>
+                    <EventLocation address={event.address} location={event.location} />
                     <div>主辦：{event.host.nickname}</div>
                   </div>
                 </div>

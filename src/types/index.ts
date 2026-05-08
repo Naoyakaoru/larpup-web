@@ -1,3 +1,19 @@
+export interface Address {
+  id: number;
+  name: string;
+  address: string | null;
+  map_url: string | null;
+  region: string;
+  deleted_at: string | null;
+  audit_logs?: {
+    id: number;
+    action: string;
+    user_id: number;
+    metadata: Record<string, unknown>;
+    created_at: string;
+  }[];
+}
+
 export interface User {
   id: number;
   handle: string;
@@ -15,7 +31,7 @@ export interface PublicProfile {
   nickname: string;
   gender: "male" | "female";
   avatar_url: string | null;
-  hosted_events?: Pick<Event, "id" | "script" | "scheduled_at" | "location" | "status">[];
+  hosted_events?: (Pick<Event, "id" | "script" | "scheduled_at" | "location" | "status"> & { address: { name: string; region: string } | null })[];
 }
 
 export interface Script {
@@ -56,7 +72,8 @@ export interface Event {
   offline_male: number;
   offline_female: number;
   scheduled_at: string;
-  location: string;
+  location: string | null;
+  address: Address | null;
   status: "recruiting" | "full" | "completed" | "cancelled";
   confirmed_count: number;
   available_slots: number;

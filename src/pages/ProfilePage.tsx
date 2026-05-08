@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { getMyEvents, getMyStores, updateMe } from "../api/users";
 import { useAuth } from "../contexts/AuthContext";
 import type { Event } from "../types";
-import { EVENT_STATUS_LABELS as STATUS_LABELS } from "../utils/labels";
+import { EVENT_STATUS_LABELS as STATUS_LABELS, REGION_LABELS } from "../utils/labels";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString("zh-TW", {
@@ -31,7 +31,7 @@ function EventList({ events }: { events: Event[] }) {
               {e.script.title}
             </div>
             <div className="text-xs text-gray-400 truncate">
-              {formatDate(e.scheduled_at)}・{e.location}
+              {formatDate(e.scheduled_at)}・{e.address ? `${REGION_LABELS[e.address.region as keyof typeof REGION_LABELS] ?? e.address.region}·${e.address.name}` : e.location}
             </div>
           </div>
           <span className="text-xs text-gray-500 ml-2 shrink-0">
@@ -119,7 +119,8 @@ export default function ProfilePage() {
         }
         updated = await updateMe(data);
       }
-      login(localStorage.getItem("larpup_token")!, updated);
+      const token = localStorage.getItem("larpup_token");
+      if (token) login(token, updated);
       setEditing(false);
       setSaveMsg("已儲存");
     } catch (err) {
@@ -373,6 +374,18 @@ export default function ProfilePage() {
                   <span className="text-sm font-medium text-gray-900">
                     店家管理
                   </span>
+                </Link>
+                <Link
+                  to="/admin/addresses"
+                  className="flex items-center gap-3 p-3 bg-surface border border-gray-200 rounded-md hover:border-brand-light hover:shadow-sm transition-all"
+                >
+                  <span className="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center shrink-0">
+                    <svg className="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </span>
+                  <span className="text-sm font-medium text-gray-900">地址管理</span>
                 </Link>
               </div>
             </section>

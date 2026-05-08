@@ -52,3 +52,19 @@ export const GENRE_LABELS: Record<number, string> = Object.fromEntries(GENRES)
 export const GENRE_BY_LABEL: Record<string, number> = Object.fromEntries(
   GENRES.map(([id, label]) => [label, id])
 )
+
+export const REGION_OPTIONS = [
+  { value: "taipei_city", label: "台北" },
+  { value: "new_taipei",  label: "新北" },
+  { value: "taichung",    label: "台中" },
+  { value: "kaohsiung",   label: "高雄" },
+] as const
+
+export type RegionKey = typeof REGION_OPTIONS[number]["value"]
+
+export const REGION_LABELS: Record<RegionKey, string> = Object.fromEntries(
+  REGION_OPTIONS.map(({ value, label }) => [value, label])
+) as Record<RegionKey, string>
+
+/** @deprecated use REGION_OPTIONS */
+export const TAIWAN_REGIONS = REGION_OPTIONS.map((o) => o.value) as string[]

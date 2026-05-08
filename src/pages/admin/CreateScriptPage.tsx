@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { createScript } from "../../api/scripts";
 import { GENRES, DIFFICULTY_OPTIONS } from "../../utils/labels";
@@ -38,7 +38,7 @@ export default function CreateScriptPage() {
     );
   }
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
     if (genres.length === 0) {
       setError("請至少選一個類型");

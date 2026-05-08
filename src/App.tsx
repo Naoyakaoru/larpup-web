@@ -19,8 +19,10 @@ import EditScriptPage from './pages/admin/EditScriptPage'
 import CreateStorePage from './pages/admin/CreateStorePage'
 import AdminStoresPage from './pages/admin/StoresPage'
 import ImportScriptsPage from './pages/admin/ImportScriptsPage'
+import AdminAddressesPage from './pages/admin/AddressesPage'
 import StoreManagePage from './pages/StoreManagePage'
 import StoreScriptVersionsPage from './pages/StoreScriptVersionsPage'
+import StoreImportScriptVersionsPage from './pages/StoreImportScriptVersionsPage'
 import UserProfilePage from './pages/UserProfilePage'
 
 const router = createBrowserRouter([
@@ -42,6 +44,7 @@ const router = createBrowserRouter([
           { path: 'me', element: <ProfilePage /> },
           { path: 'stores/:id/manage', element: <StoreManagePage /> },
           { path: 'stores/:id/script_versions', element: <StoreScriptVersionsPage /> },
+          { path: 'stores/:id/script_versions/import', element: <StoreImportScriptVersionsPage /> },
         ],
       },
       {
@@ -53,6 +56,7 @@ const router = createBrowserRouter([
           { path: 'admin/scripts/:id/edit', element: <EditScriptPage /> },
           { path: 'admin/stores', element: <AdminStoresPage /> },
           { path: 'admin/stores/new', element: <CreateStorePage /> },
+          { path: 'admin/addresses', element: <AdminAddressesPage /> },
         ],
       },
     ],
