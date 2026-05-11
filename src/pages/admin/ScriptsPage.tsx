@@ -56,12 +56,12 @@ export default function AdminScriptsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <div>
+        <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-gray-900">劇本管理</h1>
           {pendingCount > 0 && (
-            <p className="text-sm text-yellow-600 mt-1">
+            <span className="text-sm bg-yellow-100 text-yellow-800 px-2.5 py-0.5 rounded-full font-medium">
               {pendingCount} 筆待審核
-            </p>
+            </span>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -95,7 +95,7 @@ export default function AdminScriptsPage() {
                 <th className="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">
                   難度
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">
+                <th className="text-center px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">
                   人數
                 </th>
                 <th className="text-center px-4 py-3 font-medium text-gray-400 text-xs w-8 hidden sm:table-cell">
@@ -123,7 +123,7 @@ export default function AdminScriptsPage() {
                   <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">
                     {DIFFICULTY_LABEL[script.difficulty]}
                   </td>
-                  <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">
+                  <td className="px-4 py-3 text-center text-gray-500 hidden sm:table-cell">
                     {script.total_slots} 人
                   </td>
                   <td className="px-4 py-3 text-center text-green-500 text-xs hidden sm:table-cell">

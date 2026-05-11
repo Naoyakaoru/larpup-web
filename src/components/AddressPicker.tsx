@@ -36,8 +36,8 @@ export default function AddressPicker({
   useEffect(() => {
     if (!open) return;
     clearTimeout(timer.current);
+    setLoading(true);
     timer.current = setTimeout(async () => {
-      setLoading(true);
       try {
         const data = await getAddresses({ q: query || undefined, version_id: versionId });
         setResults(data);
@@ -64,7 +64,7 @@ export default function AddressPicker({
 
   if (value && !open) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm">
+      <div className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-md bg-surface text-sm">
         <span className="flex-1 font-medium text-gray-800">{value.name}</span>
         {value.address && (
           <span className="text-xs text-gray-400 truncate max-w-[200px]">{value.address}</span>
@@ -109,7 +109,7 @@ export default function AddressPicker({
         className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
       />
       {open && (
-        <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+        <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-surface border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
           {loading ? (
             <p className="px-3 py-2 text-sm text-gray-400">搜尋中...</p>
           ) : results.length === 0 ? (
@@ -120,7 +120,7 @@ export default function AddressPicker({
                 key={a.id}
                 type="button"
                 onClick={() => select(a)}
-                className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-start gap-2"
+                className="w-full text-left px-3 py-2 hover:bg-gray-100 flex items-start gap-2"
               >
                 <span className="flex-1">
                   <span className="text-sm font-medium text-gray-800 block">{a.name}</span>

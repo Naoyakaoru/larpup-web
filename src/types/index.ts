@@ -23,6 +23,8 @@ export interface User {
   avatar_url: string | null;
   is_admin: boolean;
   show_hosted_events: boolean;
+  has_google?: boolean;
+  has_line?: boolean;
 }
 
 export interface PublicProfile {
@@ -109,6 +111,12 @@ export interface EventMember {
 export interface AuthResponse {
   token: string;
   user: User;
+}
+
+export interface SsoPendingResponse {
+  temp_token: string;
+  email: string;
+  nickname: string;
 }
 
 export interface Store {

@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { request, ApiError } from "../api/client";
 
-const BASE = "/api/v1";
+
+
 
 function mockFetch(status: number, body: unknown) {
   return vi.fn().mockResolvedValue({
@@ -48,7 +49,9 @@ describe("request – Authorization header", () => {
 
     await request("/events/1");
 
-    expect(fetch.mock.calls[0][0]).toBe(`${BASE}/events/1`);
+    // URL includes the base from VITE_API_URL (may be relative or absolute)
+    const url = fetch.mock.calls[0][0] as string;
+    expect(url).toMatch(/\/api\/v1\/events\/1$/);
   });
 });
 
