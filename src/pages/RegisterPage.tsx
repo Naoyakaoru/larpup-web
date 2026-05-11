@@ -187,7 +187,7 @@ export default function RegisterPage() {
             {/* Hidden GoogleLogin — preserves id_token flow */}
             <div
               ref={googleBtnRef}
-              className="absolute opacity-0 pointer-events-none h-0 overflow-hidden"
+              style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '400px' }}
               aria-hidden="true"
               data-testid="google-login-hidden"
             >
