@@ -1,9 +1,46 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { getMyEvents, getMyStores, updateMe } from "../api/users";
+import { ssoGoogle } from "../api/auth";
 import { useAuth } from "../contexts/AuthContext";
+import { GoogleLogin } from "@react-oauth/google";
 import type { Event } from "../types";
 import { EVENT_STATUS_LABELS as STATUS_LABELS, REGION_LABELS } from "../utils/labels";
+
+function LineIcon({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M22 10.06C22 5.5 17.52 1.82 12 1.82S2 5.5 2 10.06c0 4.1 3.64 7.53 8.56 8.18.33.07.78.22.9.5.1.26.07.66.03.92l-.14.86c-.04.26-.2 1.02.9.55 1.1-.46 5.9-3.48 8.05-5.96C21.27 13.31 22 11.76 22 10.06z"/>
+    </svg>
+  );
+}
+
+function GoogleIcon({ className = "w-5 h-5" }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+    </svg>
+  );
+}
+
+const LINE_CHANNEL_ID   = import.meta.env.VITE_LINE_CHANNEL_ID as string;
+const LINE_REDIRECT_URI = import.meta.env.VITE_LINE_REDIRECT_URI as string;
+
+function buildLineLoginUrl(): string {
+  const state = crypto.randomUUID();
+  sessionStorage.setItem("line_oauth_state", state);
+  const params = new URLSearchParams({
+    response_type: "code",
+    client_id: LINE_CHANNEL_ID,
+    redirect_uri: LINE_REDIRECT_URI,
+    state,
+    scope: "profile openid email",
+  });
+  return `https://access.line.me/oauth2/v2.1/authorize?${params.toString()}`;
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString("zh-TW", {
@@ -62,6 +99,16 @@ export default function ProfilePage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [saveMsg, setSaveMsg] = useState("");
+  const [bindMsg, setBindMsg] = useState("");
+  const [bindError, setBindError] = useState("");
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+
+  function triggerGoogleLogin() {
+    setBindError("");
+    setBindMsg("");
+    const btn = googleBtnRef.current?.querySelector('[role="button"]') as HTMLElement;
+    if (btn) btn.click();
+  }
 
   useEffect(() => {
     Promise.all([getMyEvents(), getMyStores()])
@@ -241,6 +288,73 @@ export default function ProfilePage() {
                 />
               </div>
             )}
+
+            <div className="pt-4 border-t border-gray-100">
+              <label className="block text-xs text-gray-500 mb-2">社群帳號綁定</label>
+              <div className="flex gap-3">
+                {user?.has_google ? (
+                  <div className="flex items-center gap-1.5 text-sm text-gray-500 px-3 py-1.5 border border-gray-200 rounded-md bg-gray-50">
+                    <GoogleIcon className="w-4 h-4" />
+                    已綁定 Google
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={triggerGoogleLogin}
+                    className="flex items-center gap-1.5 text-sm text-[#3c4043] px-3 py-1.5 border border-[#dadce0] rounded-md bg-white hover:bg-[#f8f9fa] active:bg-[#f1f3f4] transition-colors"
+                  >
+                    <GoogleIcon className="w-4 h-4" />
+                    綁定 Google
+                  </button>
+                )}
+                {user?.has_line ? (
+                  <div className="flex items-center gap-1.5 text-sm text-gray-500 px-3 py-1.5 border border-gray-200 rounded-md bg-gray-50">
+                    <LineIcon className="w-4 h-4" />
+                    已綁定 LINE
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { window.location.href = buildLineLoginUrl(); }}
+                    className="flex items-center gap-1.5 text-sm text-white px-3 py-1.5 border border-transparent rounded-md bg-[#06C755] hover:bg-[#05B34C] active:bg-[#049B42] transition-colors"
+                  >
+                    <LineIcon className="w-4 h-4" />
+                    綁定 LINE
+                  </button>
+                )}
+              </div>
+              {bindMsg && <p className="text-xs text-green-600 mt-2">{bindMsg}</p>}
+              {bindError && <p className="text-xs text-red-500 mt-2">{bindError}</p>}
+            </div>
+
+            {/* Hidden GoogleLogin button */}
+            <div
+              ref={googleBtnRef}
+              className="absolute opacity-0 pointer-events-none h-0 overflow-hidden"
+              aria-hidden="true"
+            >
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  const idToken = credentialResponse.credential;
+                  if (!idToken) { setBindError("Google 授權失敗"); return; }
+                  try {
+                    const res = await ssoGoogle(idToken);
+                    if ('token' in res && res.token && res.user) {
+                      localStorage.setItem('larpup_token', res.token);
+                      login(res.token, res.user);
+                      setBindMsg("成功綁定 Google 帳號！");
+                    }
+                  } catch (err) {
+                    setBindError(err instanceof Error ? err.message : "綁定失敗");
+                  }
+                }}
+                onError={() => {
+                  setBindError("Google 登入發生錯誤");
+                }}
+                useOneTap={false}
+              />
+            </div>
+
             {saveMsg && <p className="text-sm text-red-500">{saveMsg}</p>}
             <div className="flex gap-2 pt-1">
               <button
@@ -273,6 +387,10 @@ export default function ProfilePage() {
                 </h1>
                 <p className="text-sm text-gray-400">@{user?.handle}</p>
                 <p className="text-sm text-gray-400">{user?.email}</p>
+                <div className="flex gap-2 mt-2">
+                  {user?.has_google && <GoogleIcon className="w-5 h-5 opacity-70" />}
+                  {user?.has_line && <LineIcon className="w-5 h-5 text-[#06C755] opacity-80" />}
+                </div>
                 {saveMsg && (
                   <p className="text-xs text-green-600 mt-1">{saveMsg}</p>
                 )}

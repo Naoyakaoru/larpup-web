@@ -23,6 +23,8 @@ export interface User {
   avatar_url: string | null;
   is_admin: boolean;
   show_hosted_events: boolean;
+  has_google?: boolean;
+  has_line?: boolean;
 }
 
 export interface PublicProfile {

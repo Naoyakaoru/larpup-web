@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import {
+  getScript,
   getScripts,
   getScriptVersions,
   type ScriptVersion,
@@ -60,6 +61,25 @@ export default function CreateEventPage() {
     const t = setTimeout(() => setDebouncedSearch(scriptSearch), 500);
     return () => clearTimeout(t);
   }, [scriptSearch]);
+
+  // Load script if script_id is provided in URL
+  useEffect(() => {
+    const scriptIdParam = searchParams.get("script_id");
+    if (scriptIdParam && !selectedScript) {
+      const sid = Number(scriptIdParam);
+      getScript(sid).then((s) => {
+        setSelectedScript(s);
+        setScriptSearch(s.title);
+      });
+      // If no specific version was locked, load the available versions
+      if (!scriptVersionId) {
+        setVersionsLoading(true);
+        getScriptVersions(sid)
+          .then(setVersions)
+          .finally(() => setVersionsLoading(false));
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!debouncedSearch) {
@@ -179,9 +199,7 @@ export default function CreateEventPage() {
           {scriptVersionId ? (
             // Locked to version selected on script detail page
             <div className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm bg-gray-50 text-gray-500">
-              {versionState?.store_name
-                ? `${versionState.store_name} 版本`
-                : "已選擇版本"}
+              {selectedScript?.title || "載入中..."}
             </div>
           ) : (
             <div className="relative" ref={searchRef}>
@@ -209,14 +227,14 @@ export default function CreateEventPage() {
                 )}
               </div>
               {dropdownOpen && filteredScripts.length > 0 && (
-                <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-52 overflow-y-auto">
+                <div className="absolute z-10 w-full bg-surface border border-gray-200 rounded-md shadow-lg mt-1 max-h-52 overflow-y-auto">
                   {filteredScripts.map((s) => (
                     <button
                       key={s.id}
                       type="button"
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => selectScript(s)}
-                      className="w-full text-left px-3 py-2.5 text-sm hover:bg-gray-50 flex items-center justify-between gap-4 border-b border-gray-100 last:border-0"
+                      className="w-full text-left px-3 py-2.5 text-sm hover:bg-gray-100 flex items-center justify-between gap-4 border-b border-gray-100 last:border-0"
                     >
                       <span className="font-medium text-gray-900">
                         {s.title}
@@ -229,7 +247,7 @@ export default function CreateEventPage() {
                 </div>
               )}
               {dropdownOpen && scriptSearch && filteredScripts.length === 0 && (
-                <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow mt-1 px-3 py-3 text-sm text-gray-400">
+                <div className="absolute z-10 w-full bg-surface border border-gray-200 rounded-md shadow mt-1 px-3 py-3 text-sm text-gray-400">
                   找不到符合的劇本
                 </div>
               )}
@@ -318,11 +336,10 @@ export default function CreateEventPage() {
                         selectedVersion?.id === v.id ? null : v,
                       )
                     }
-                    className={`w-full text-left rounded-md border px-3 py-2 text-sm transition-colors ${
-                      selectedVersion?.id === v.id
+                    className={`w-full text-left rounded-md border px-3 py-2 text-sm transition-colors ${selectedVersion?.id === v.id
                         ? "border-brand bg-brand/5"
-                        : "border-gray-200 hover:border-gray-300 bg-white"
-                    }`}
+                        : "border-gray-200 hover:border-gray-300 bg-surface"
+                      }`}
                   >
                     <div className="flex justify-between items-center gap-2">
                       <span className="font-medium text-gray-900">
@@ -395,7 +412,7 @@ export default function CreateEventPage() {
             )}
             <div className="space-y-1.5">
               <p className="text-xs text-gray-500 font-medium">
-                線下已確定朋友
+                線下已確定人數
               </p>
               {(
                 [

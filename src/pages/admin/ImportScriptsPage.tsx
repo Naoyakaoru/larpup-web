@@ -329,10 +329,10 @@ export default function ImportScriptsPage() {
                   <th className="px-3 py-2 text-left font-medium text-gray-600 min-w-[180px]">
                     劇本名稱
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-400 w-16 text-xs">
+                  <th className="px-3 py-2 text-center font-medium text-gray-400 w-16 text-xs">
                     評分
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-400 w-16 text-xs">
+                  <th className="px-3 py-2 text-center font-medium text-gray-400 w-16 text-xs">
                     收藏
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-gray-400 w-28 text-xs">
@@ -344,16 +344,16 @@ export default function ImportScriptsPage() {
                   <th className="px-3 py-2 text-left font-medium text-gray-600 min-w-[180px]">
                     類型
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-400 w-16 text-xs">
+                  <th className="px-3 py-2 text-center font-medium text-gray-400 w-16 text-xs">
                     男
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-400 w-16 text-xs">
+                  <th className="px-3 py-2 text-center font-medium text-gray-400 w-16 text-xs">
                     女
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-400 w-16 text-xs">
+                  <th className="px-3 py-2 text-center font-medium text-gray-400 w-16 text-xs">
                     任意
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-400 w-20 text-xs">
+                  <th className="px-3 py-2 text-center font-medium text-gray-400 w-20 text-xs">
                     時長(h)
                   </th>
                   <th className="px-3 py-2 text-center font-medium text-gray-400 w-10 text-xs">
@@ -378,10 +378,10 @@ export default function ImportScriptsPage() {
                       />
                     </td>
                     <td className="px-3 py-2 text-sm">{row.title}</td>
-                    <td className="px-3 py-2 text-xs text-gray-400">
+                    <td className="px-3 py-2 text-center text-xs text-gray-400">
                       {row._rating || "—"}
                     </td>
-                    <td className="px-3 py-2 text-xs text-gray-400">
+                    <td className="px-3 py-2 text-center text-xs text-gray-400">
                       {row._wish_count || "—"}
                     </td>
                     <td className="px-3 py-2 text-xs text-gray-400">
@@ -411,16 +411,16 @@ export default function ImportScriptsPage() {
                         onChange={(ids) => update(row._key, { genres: ids })}
                       />
                     </td>
-                    <td className="px-3 py-2 text-xs text-gray-400">
+                    <td className="px-3 py-2 text-center text-xs text-gray-400">
                       {row.male_slots || "—"}
                     </td>
-                    <td className="px-3 py-2 text-xs text-gray-400">
+                    <td className="px-3 py-2 text-center text-xs text-gray-400">
                       {row.female_slots || "—"}
                     </td>
-                    <td className="px-3 py-2 text-xs text-gray-400">
+                    <td className="px-3 py-2 text-center text-xs text-gray-400">
                       {row.any_slots || "—"}
                     </td>
-                    <td className="px-3 py-2 text-xs text-gray-400">
+                    <td className="px-3 py-2 text-center text-xs text-gray-400">
                       {row.duration ?? "—"}
                     </td>
                     <td className="px-3 py-2 text-center text-green-500 text-xs">
