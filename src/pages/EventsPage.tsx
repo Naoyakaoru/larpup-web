@@ -67,6 +67,17 @@ export default function EventsPage() {
               className="block bg-surface rounded-lg border border-gray-200 p-4 hover:border-brand-light hover:shadow-sm transition-all"
             >
               <div className="flex items-start justify-between gap-4">
+                {event.script.cover_image_url ? (
+                  <img
+                    src={event.script.cover_image_url}
+                    alt={event.script.title}
+                    className="w-16 h-24 object-cover rounded shadow-sm shrink-0"
+                  />
+                ) : (
+                  <div className="w-16 h-24 bg-gray-100 rounded border border-gray-200 shrink-0 flex items-center justify-center text-gray-400 text-xs">
+                    無封面
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium text-gray-900">
