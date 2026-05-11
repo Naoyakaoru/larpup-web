@@ -25,9 +25,15 @@ vi.mock("@react-oauth/google", () => ({
   }) => {
     mockGoogleLoginSuccess.mockImplementation(onSuccess);
     mockGoogleLoginError.mockImplementation(onError);
+    // data-testid differs from the visible SsoButton's id so selectors don't collide.
+    // onClick enables testing the triggerGoogleLogin() click-chain.
     return (
-      <button data-testid="google-login-btn" type="button">
-        使用 Google 登入
+      <button
+        data-testid="google-login-inner"
+        type="button"
+        onClick={() => onSuccess({ credential: "inner-click-credential" })}
+      >
+        Google OAuth (hidden)
       </button>
     );
   },
@@ -116,15 +122,18 @@ describe("LoginPage – email/password login", () => {
 });
 
 describe("LoginPage – Google SSO", () => {
-  it("renders Google login button", () => {
+  it("renders both the visible Google button and the hidden inner OAuth button", () => {
     renderPage();
-    expect(screen.getByTestId("google-login-btn")).toBeInTheDocument();
+    // Visible custom SsoButton
+    expect(screen.getByRole("button", { name: "使用 Google 登入" })).toBeInTheDocument();
+    // Hidden inner GoogleLogin shim
+    expect(screen.getByTestId("google-login-inner")).toBeInTheDocument();
   });
 
   it("navigates to / when Google SSO returns existing user (200)", async () => {
     mockSsoGoogle.mockResolvedValueOnce({
       token: "google-jwt",
-      user: { id: 2, handle: "gg", email: "g@g.com", nickname: "GG", gender: "female", avatar_url: null, is_admin: false, show_hosted_events: false },
+      user: { id: 2, handle: "gg", email: "g@g.com", nickname: "GG", gender: "female" as const, avatar_url: null, is_admin: false, show_hosted_events: false },
     });
 
     renderPage();
@@ -193,5 +202,44 @@ describe("LoginPage – LINE SSO", () => {
 
     expect(sessionStorage.getItem("line_oauth_state")).toBeTruthy();
     assignSpy.mockRestore();
+  });
+});
+
+// ── Button click mechanism ─────────────────────────────────────────────────
+// Tests that clicking the VISIBLE custom Google SsoButton actually triggers
+// the hidden inner GoogleLogin button (triggerGoogleLogin) and ultimately
+// calls ssoGoogle with the credential.
+
+describe("LoginPage – Google button click mechanism", () => {
+  it("clicking the visible 使用 Google 登入 button triggers the inner OAuth button and calls ssoGoogle", async () => {
+    mockSsoGoogle.mockResolvedValueOnce({
+      token: "chain-jwt",
+      user: { id: 3, handle: "h3", email: "c@c.com", nickname: "C", gender: "male" as const, avatar_url: null, is_admin: false, show_hosted_events: false },
+    });
+
+    renderPage();
+
+    // Click the VISIBLE SsoButton (not the hidden inner button)
+    const visibleBtn = screen.getByRole("button", { name: "使用 Google 登入" });
+    await userEvent.click(visibleBtn);
+
+    // triggerGoogleLogin() should have found + clicked the inner button,
+    // which fires onSuccess({ credential: "inner-click-credential" }) → ssoGoogle
+    await waitFor(() =>
+      expect(mockSsoGoogle).toHaveBeenCalledWith("inner-click-credential"),
+    );
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/"));
+  });
+
+  it("handles credential missing from inner button click gracefully", async () => {
+    renderPage();
+    await act(async () => {
+      mockGoogleLoginSuccess({ credential: undefined as unknown as string });
+    });
+
+    await waitFor(() =>
+      expect(screen.getByText("Google 登入失敗，請再試一次")).toBeInTheDocument(),
+    );
+    expect(mockSsoGoogle).not.toHaveBeenCalled();
   });
 });
