@@ -38,7 +38,7 @@ const mockGoogleLoginSuccess = vi.fn();
 const mockGoogleLoginError = vi.fn();
 
 vi.mock("@react-oauth/google", () => ({
-  GoogleLogin: ({ onSuccess, onError }: any) => {
+  GoogleLogin: ({ onSuccess, onError }: { onSuccess: (r: { credential?: string }) => void; onError: () => void }) => {
     mockGoogleLoginSuccess.mockImplementation(onSuccess);
     mockGoogleLoginError.mockImplementation(onError);
     return <button data-testid="google-login-btn">使用 Google 綁定</button>;
@@ -58,7 +58,6 @@ vi.mock("../api/auth", () => ({
 
 const mockGetMyEvents = vi.mocked(usersApi.getMyEvents);
 const mockGetMyStores = vi.mocked(usersApi.getMyStores);
-const mockUpdateMe = vi.mocked(usersApi.updateMe);
 const mockSsoGoogle = vi.mocked(authApi.ssoGoogle);
 
 // ── Test Setup ─────────────────────────────────────────────────────────────

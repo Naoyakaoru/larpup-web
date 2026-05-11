@@ -6,7 +6,7 @@ import Logo from './Logo'
 
 export default function Layout() {
   const { user, logout } = useAuth()
-  const { isDark, mode, cycle } = useTheme()
+  const { mode, cycle } = useTheme()
   const navigate = useNavigate()
 
   async function handleLogout() {

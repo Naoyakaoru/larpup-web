@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { request, ApiError } from "../api/client";
 
-const BASE = "/api/v1";
+
+
 
 function mockFetch(status: number, body: unknown) {
   return vi.fn().mockResolvedValue({
