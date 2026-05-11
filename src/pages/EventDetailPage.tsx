@@ -347,6 +347,7 @@ export default function EventDetailPage() {
                       <DatePicker
                         selected={editScheduledAt}
                         onChange={setEditScheduledAt}
+                        onFocus={(e) => e.target.blur()}
                         showTimeSelect
                         timeIntervals={30}
                         dateFormat="yyyy/MM/dd HH:mm"
