@@ -14,12 +14,18 @@
   --color-surface-2: #f9fafb;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   background-color: var(--color-bg-base);
   color: var(--color-text-base);
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* Dark mode — 方案B 夜晚冒險 Puppy */
