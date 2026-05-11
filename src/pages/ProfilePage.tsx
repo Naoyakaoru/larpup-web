@@ -106,8 +106,13 @@ export default function ProfilePage() {
   function triggerGoogleLogin() {
     setBindError("");
     setBindMsg("");
-    const btn = googleBtnRef.current?.querySelector('[role="button"]') as HTMLElement;
-    if (btn) btn.click();
+    const btn = googleBtnRef.current?.querySelector<HTMLElement>('[role="button"],button,div[tabindex]');
+    if (btn) {
+      btn.click();
+      return;
+    }
+    ;(window as Window & { google?: { accounts?: { id?: { prompt?: () => void } } } })
+      .google?.accounts?.id?.prompt?.();
   }
 
   useEffect(() => {

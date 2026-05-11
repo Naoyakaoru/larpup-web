@@ -122,9 +122,17 @@ export default function LoginPage() {
   }
 
   function triggerGoogleLogin() {
-    // Click the hidden GoogleLogin button to initiate Google's id_token flow
+    // Try clicking the rendered Google button first
     const inner = googleBtnRef.current?.querySelector<HTMLElement>('[role="button"],button,div[tabindex]')
-    inner?.click()
+    if (inner) {
+      inner.click()
+      return
+    }
+    // Fallback: renderButton may not have rendered in production build;
+    // call google.accounts.id.prompt() directly — uses the same onSuccess callback
+    // registered by <GoogleLogin> and avoids popup-blocker issues.
+    ;(window as Window & { google?: { accounts?: { id?: { prompt?: () => void } } } })
+      .google?.accounts?.id?.prompt?.()
   }
 
   return (

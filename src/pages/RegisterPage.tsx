@@ -145,7 +145,12 @@ export default function RegisterPage() {
 
   function triggerGoogleLogin() {
     const inner = googleBtnRef.current?.querySelector<HTMLElement>('[role="button"],button,div[tabindex]');
-    inner?.click();
+    if (inner) {
+      inner.click();
+      return;
+    }
+    ;(window as Window & { google?: { accounts?: { id?: { prompt?: () => void } } } })
+      .google?.accounts?.id?.prompt?.();
   }
 
   return (
