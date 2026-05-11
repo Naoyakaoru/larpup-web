@@ -24,6 +24,7 @@ import StoreManagePage from './pages/StoreManagePage'
 import StoreScriptVersionsPage from './pages/StoreScriptVersionsPage'
 import StoreImportScriptVersionsPage from './pages/StoreImportScriptVersionsPage'
 import UserProfilePage from './pages/UserProfilePage'
+import LineCallbackPage from './pages/LineCallbackPage'
 
 const router = createBrowserRouter([
   {
@@ -37,6 +38,7 @@ const router = createBrowserRouter([
       { path: 'users/:handle', element: <UserProfilePage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
+      { path: 'auth/line/callback', element: <LineCallbackPage /> },
       {
         element: <ProtectedRoute />,
         children: [

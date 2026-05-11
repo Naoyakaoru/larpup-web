@@ -111,6 +111,12 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface SsoPendingResponse {
+  temp_token: string;
+  email: string;
+  nickname: string;
+}
+
 export interface Store {
   id: number;
   name: string;
