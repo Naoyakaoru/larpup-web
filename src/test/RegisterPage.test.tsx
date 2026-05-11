@@ -67,7 +67,7 @@ function renderPage(search = "") {
 
 const MOCK_USER = {
   id: 1, handle: "u000001", email: "new@example.com",
-  nickname: "NewUser", gender: "female",
+  nickname: "NewUser", gender: "female" as const,
   avatar_url: null, is_admin: false, show_hosted_events: false,
 };
 

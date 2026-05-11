@@ -177,7 +177,6 @@ export default function LoginPage() {
             onError={() => setError('Google 登入取消或失敗')}
             width={400}
             text="signin_with"
-            locale="zh-TW"
             theme={isDark ? 'filled_black' : 'outline'}
           />
         </div>

@@ -12,7 +12,7 @@ const mockUser = {
   email: "test@example.com",
   handle: "testuser",
   nickname: "Test User",
-  gender: "male",
+  gender: "male" as const,
   is_admin: false,
   avatar_url: null,
   show_hosted_events: false,

@@ -206,7 +206,6 @@ export default function RegisterPage() {
                 onError={() => setError("Google 登入取消或失敗")}
                 width={400}
                 text="signup_with"
-                locale="zh-TW"
                 theme={isDark ? "filled_black" : "outline"}
               />
             </div>
