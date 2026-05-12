@@ -67,6 +67,7 @@ export interface Event {
     price: number | null;
     store: { id: number; name: string } | null;
     version_name: string | null;
+    cover_image_url: string | null;
   };
   host: { id: number; handle: string; nickname: string };
   script_version_id: number;

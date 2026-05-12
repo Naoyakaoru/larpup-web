@@ -1,4 +1,7 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import Cropper from "react-easy-crop";
+import type { Area } from "react-easy-crop";
+
 import { Link } from "react-router-dom";
 import { getMyEvents, getMyStores, updateMe } from "../api/users";
 import { ssoGoogle } from "../api/auth";
@@ -42,15 +45,7 @@ function buildLineLoginUrl(): string {
   return `https://access.line.me/oauth2/v2.1/authorize?${params.toString()}`;
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("zh-TW", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
+import { formatDateShort as formatDate } from "../utils/formatDate";
 
 function EventList({ events }: { events: Event[] }) {
   if (events.length === 0)
@@ -103,6 +98,52 @@ export default function ProfilePage() {
   const [bindError, setBindError] = useState("");
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
+  // ── Cropper state ──────────────────────────────────────────────────────────
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+
+  const onCropComplete = useCallback((_: Area, pixels: Area) => {
+    setCroppedAreaPixels(pixels);
+  }, []);
+
+  async function getCroppedImg(src: string, pixels: Area): Promise<File> {
+    const img = await new Promise<HTMLImageElement>((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = rej;
+      i.src = src;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = pixels.width;
+    canvas.height = pixels.height;
+    canvas.getContext("2d")!.drawImage(
+      img, pixels.x, pixels.y, pixels.width, pixels.height,
+      0, 0, pixels.width, pixels.height,
+    );
+    return new Promise((resolve) =>
+      canvas.toBlob(
+        (blob) => resolve(new File([blob!], "avatar.jpg", { type: "image/jpeg" })),
+        "image/jpeg", 0.92,
+      ),
+    );
+  }
+
+  async function confirmCrop() {
+    if (!cropSrc || !croppedAreaPixels) return;
+    const croppedFile = await getCroppedImg(cropSrc, croppedAreaPixels);
+    if (croppedFile.size > 1 * 1024 * 1024) {
+      setSaveMsg("裁切後圖片仍超過 1MB，請選擇更小的原圖");
+      setCropSrc(null);
+      return;
+    }
+    setAvatarFile(croppedFile);
+    setAvatarPreview(URL.createObjectURL(croppedFile));
+    setCropSrc(null);
+    setSaveMsg("");
+  }
+
   function triggerGoogleLogin() {
     setBindError("");
     setBindMsg("");
@@ -141,8 +182,21 @@ export default function ProfilePage() {
 
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
-    setAvatarFile(file);
-    setAvatarPreview(file ? URL.createObjectURL(file) : null);
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        setSaveMsg("請上傳圖片檔案（JPG、PNG、WebP 等）");
+        return;
+      }
+      // Open cropper — size check is done after cropping
+      setSaveMsg("");
+      setCropSrc(URL.createObjectURL(file));
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      return;
+    }
+    setSaveMsg("");
+    setAvatarFile(null);
+    setAvatarPreview(null);
   }
 
   async function handleSave() {
@@ -511,6 +565,47 @@ export default function ProfilePage() {
               </div>
             </section>
           )}
+        </div>
+      )}
+
+      {/* ── Crop Modal ──────────────────────────────────────────────────────── */}
+      {cropSrc && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black/90">
+          <div className="flex items-center justify-between px-4 py-3 bg-black/60 backdrop-blur-sm">
+            <span className="text-white font-medium">裁切頭貼</span>
+            <button onClick={() => setCropSrc(null)} className="text-gray-400 hover:text-white text-sm">
+              取消
+            </button>
+          </div>
+          <div className="relative flex-1">
+            <Cropper
+              image={cropSrc}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              cropShape="round"
+              showGrid={false}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={onCropComplete}
+            />
+          </div>
+          <div className="px-6 py-3 bg-black/60 backdrop-blur-sm">
+            <input
+              type="range" min={1} max={3} step={0.05} value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="w-full accent-white"
+            />
+            <p className="text-xs text-gray-400 text-center mt-1">捏合或拖曳滑桿縮放</p>
+          </div>
+          <div className="px-4 py-3 bg-black/60 backdrop-blur-sm">
+            <button
+              onClick={confirmCrop}
+              className="w-full py-2.5 rounded-lg bg-brand text-white font-medium hover:bg-brand-hover transition-colors"
+            >
+              確認裁切
+            </button>
+          </div>
         </div>
       )}
     </div>

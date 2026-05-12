@@ -341,14 +341,14 @@ export default function CreateEventPage() {
                         : "border-gray-200 hover:border-gray-300 bg-surface"
                       }`}
                   >
-                    <div className="flex justify-between items-center gap-2">
-                      <span className="font-medium text-gray-900">
+                    <div>
+                      <div className="font-medium text-gray-900">
                         {v.store.name}
-                      </span>
+                      </div>
                       {v.version_name && (
-                        <span className="text-xs text-gray-400 shrink-0">
+                        <div className="text-xs text-gray-400 mt-0.5">
                           {v.version_name}
-                        </span>
+                        </div>
                       )}
                     </div>
                   </button>
@@ -495,6 +495,7 @@ export default function CreateEventPage() {
           <DatePicker
             selected={scheduledAt}
             onChange={setScheduledAt}
+            onFocus={(e) => e.target.blur()}
             showTimeSelect
             timeIntervals={30}
             dateFormat="yyyy/MM/dd HH:mm"

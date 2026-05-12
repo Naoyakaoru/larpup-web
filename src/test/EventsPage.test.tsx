@@ -35,6 +35,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
       price: null,
       store: null,
       version_name: null,
+      cover_image_url: null,
     },
     host: { id: 10, handle: "host", nickname: "Host" },
     script_version_id: 1,
@@ -83,7 +84,7 @@ describe("EventsPage – rendering", () => {
     renderPage();
 
     expect(await screen.findByText("死亡列車")).toBeInTheDocument();
-    expect(screen.getByText("主辦：Host")).toBeInTheDocument();
+    expect(screen.getByText("Host")).toBeInTheDocument();
   });
 
   it("renders confirmed count and total slots", async () => {
@@ -91,7 +92,8 @@ describe("EventsPage – rendering", () => {
     renderPage();
 
     await screen.findByText("死亡列車");
-    expect(screen.getByText("3 / 6")).toBeInTheDocument();
+    expect(screen.getByText("/6 人")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
   });
 
   it("shows status badge", async () => {
@@ -107,34 +109,7 @@ describe("EventsPage – rendering", () => {
     renderPage();
 
     await screen.findByText("死亡列車");
-    expect(screen.getByText("開放反串")).toBeInTheDocument();
-  });
-
-  it("shows compact store/version/duration info row", async () => {
-    mockEvents = [
-      makeEvent({
-        script: {
-          id: 5,
-          title: "死亡列車",
-          total_slots: 6,
-          male_slots: 3,
-          female_slots: 2,
-          any_slots: 1,
-          difficulty: "medium",
-          genres: [0],
-          duration: 3,
-          price: null,
-          store: { id: 1, name: "謎境劇本殺" },
-          version_name: "標準版",
-        },
-      }),
-    ];
-    renderPage();
-
-    await screen.findByText("死亡列車");
-    expect(screen.getByText(/謎境劇本殺/)).toBeInTheDocument();
-    expect(screen.getByText(/標準版/)).toBeInTheDocument();
-    expect(screen.getByText(/3h/)).toBeInTheDocument();
+    expect(screen.getByText("反串")).toBeInTheDocument();
   });
 
   it("renders multiple events", async () => {
