@@ -901,7 +901,12 @@ export default function EventDetailPage() {
                       <span className="font-medium">{log.user.nickname}</span>
                       {" "}{auditSummary(log)}
                       {details.length > 0 && (
-                        <span className="ml-1 text-gray-400 text-xs">{expanded ? "▲" : "▼"}</span>
+                        <svg
+                          className={`inline ml-1 w-3 h-3 text-gray-400 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
+                          viewBox="0 0 20 20" fill="currentColor"
+                        >
+                          <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                        </svg>
                       )}
                     </span>
                     <span className="text-xs text-gray-400 shrink-0 ml-3">
