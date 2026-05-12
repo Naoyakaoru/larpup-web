@@ -86,8 +86,10 @@ export interface Event {
 }
 
 export interface AuditLogEntry {
-  action: string;
-  metadata: Record<string, string>;
+  action: "created" | "updated" | "deleted";
+  metadata: {
+    changes?: Record<string, [unknown, unknown]>;
+  };
   user: { id: number; nickname: string };
   created_at: string;
 }

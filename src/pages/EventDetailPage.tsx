@@ -29,7 +29,46 @@ import {
 } from "../utils/labels";
 
 
-import { formatDate } from "../utils/formatDate";
+import { formatDate, formatDateShort } from "../utils/formatDate";
+import type { AuditLogEntry } from "../types";
+
+const AUDIT_FIELD_LABELS: Partial<Record<string, string>> = {
+  location: "地點",
+  status: "狀態",
+  scheduled_at: "時間",
+  offline_male: "線下成員 ♂︎",
+  offline_female: "線下成員 ♀︎",
+};
+
+
+function formatAuditValue(field: string, value: unknown): string {
+  if (field === "status") return (STATUS_LABELS as Record<string, string>)[String(value)] ?? String(value);
+  if (field === "scheduled_at") return formatDateShort(String(value));
+  return String(value ?? "");
+}
+
+function auditSummary(log: AuditLogEntry): string {
+  if (log.action === "created") return "建立了活動";
+  if (log.action === "deleted") return "刪除了活動";
+  if (log.action === "updated" && log.metadata.changes) {
+    const fields = Object.keys(log.metadata.changes)
+      .filter(f => f in AUDIT_FIELD_LABELS)
+      .map(f => AUDIT_FIELD_LABELS[f]!)
+      .join("、");
+    return fields ? `更改了${fields}` : "更新了活動";
+  }
+  return log.action;
+}
+
+function auditDetails(changes: Record<string, [unknown, unknown]>): { label: string; from: string; to: string }[] {
+  return Object.entries(changes)
+    .filter(([field]) => field in AUDIT_FIELD_LABELS)
+    .map(([field, [from, to]]) => ({
+      label: AUDIT_FIELD_LABELS[field]!,
+      from: formatAuditValue(field, from),
+      to: formatAuditValue(field, to),
+    }));
+}
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -50,6 +89,7 @@ export default function EventDetailPage() {
   const [editScriptVersionId, setEditScriptVersionId] = useState<number | null>(
     null,
   );
+  const [expandedLogs, setExpandedLogs] = useState<Set<number>>(new Set());
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -839,32 +879,52 @@ export default function EventDetailPage() {
         <div className="bg-surface rounded-lg border border-gray-200 p-6">
           <h2 className="font-semibold text-gray-900 mb-3">變更紀錄</h2>
           <div className="space-y-2">
-            {event.audit_logs.map((log, i) => (
-              <div key={i} className="flex items-start justify-between text-sm">
-                <span className="text-gray-600">
-                  {log.action === "location_changed" && (
-                    <>
+            {event.audit_logs.map((log, i) => {
+              const details = log.action === "updated" && log.metadata.changes
+                ? auditDetails(log.metadata.changes)
+                : [];
+              const expanded = expandedLogs.has(i);
+              return (
+                <div key={i}>
+                  <div
+                    className={`flex items-start justify-between text-sm ${details.length ? "cursor-pointer select-none" : ""}`}
+                    onClick={() => {
+                      if (!details.length) return;
+                      setExpandedLogs(prev => {
+                        const next = new Set(prev);
+                        if (next.has(i)) next.delete(i); else next.add(i);
+                        return next;
+                      });
+                    }}
+                  >
+                    <span className="text-gray-600">
                       <span className="font-medium">{log.user.nickname}</span>
-                      {" 更改地點："}
-                      <span className="line-through text-gray-400">
-                        {String(log.metadata.from ?? "")}
-                      </span>
-                      {" → "}
-                      <span>{String(log.metadata.to ?? "")}</span>
-                    </>
+                      {" "}{auditSummary(log)}
+                      {details.length > 0 && (
+                        <svg
+                          className={`inline ml-1 w-3 h-3 text-gray-400 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
+                          viewBox="0 0 20 20" fill="currentColor"
+                        >
+                          <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </span>
+                    <span className="text-xs text-gray-400 shrink-0 ml-3">
+                      {formatDateShort(log.created_at)}
+                    </span>
+                  </div>
+                  {expanded && (
+                    <div className="mt-1 ml-0 space-y-0.5">
+                      {details.map(({ label, from, to }) => (
+                        <div key={label} className="text-xs text-gray-400">
+                          {label}：{from} → {to}
+                        </div>
+                      ))}
+                    </div>
                   )}
-                </span>
-                <span className="text-xs text-gray-400 shrink-0 ml-3">
-                  {new Date(log.created_at).toLocaleString("zh-TW", {
-                    month: "2-digit",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: false,
-                  })}
-                </span>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

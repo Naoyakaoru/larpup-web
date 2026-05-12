@@ -64,36 +64,40 @@ export default function AddressPicker({
 
   if (value && !open) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-md bg-surface text-sm">
-        <span className="flex-1 font-medium text-gray-800">{value.name}</span>
-        {value.address && (
-          <span className="text-xs text-gray-400 truncate max-w-[200px]">{value.address}</span>
-        )}
-        {value.map_url && (
-          <a
-            href={value.map_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-brand hover:underline whitespace-nowrap"
-            onClick={(e) => e.stopPropagation()}
-          >
-            地圖
-          </a>
-        )}
-        <button
-          type="button"
-          onClick={clear}
-          className="text-gray-400 hover:text-gray-600 ml-1"
-        >
-          ✕
-        </button>
-        <button
-          type="button"
-          onClick={handleOpen}
-          className="text-xs text-gray-400 hover:text-gray-600"
-        >
-          更換
-        </button>
+      <div className="flex flex-col gap-1 px-3 py-2 border border-gray-300 rounded-md bg-surface text-sm">
+        <span className="font-medium text-gray-800 break-words">{value.name}</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          {value.address && (
+            <span className="text-xs text-gray-400 truncate max-w-[160px]">{value.address}</span>
+          )}
+          <div className="flex items-center gap-2 ml-auto shrink-0">
+            {value.map_url && (
+              <a
+                href={value.map_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-brand hover:underline whitespace-nowrap"
+                onClick={(e) => e.stopPropagation()}
+              >
+                地圖
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={clear}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+            <button
+              type="button"
+              onClick={handleOpen}
+              className="text-xs text-gray-400 hover:text-gray-600"
+            >
+              更換
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

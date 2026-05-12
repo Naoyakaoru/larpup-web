@@ -2,9 +2,9 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import Cropper from "react-easy-crop";
 import type { Area } from "react-easy-crop";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getMyEvents, getMyStores, updateMe } from "../api/users";
-import { ssoGoogle } from "../api/auth";
+import { ssoGoogle, logout as logoutApi } from "../api/auth";
 import { useAuth } from "../contexts/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
 import type { Event } from "../types";
@@ -76,7 +76,8 @@ function EventList({ events }: { events: Event[] }) {
 }
 
 export default function ProfilePage() {
-  const { user, login } = useAuth();
+  const { user, login, logout } = useAuth();
+  const navigate = useNavigate();
   const [hosted, setHosted] = useState<Event[]>([]);
   const [joined, setJoined] = useState<Event[]>([]);
   const [myStores, setMyStores] = useState<
@@ -107,6 +108,12 @@ export default function ProfilePage() {
   const onCropComplete = useCallback((_: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels);
   }, []);
+
+  async function handleLogout() {
+    await logoutApi().catch(() => {});
+    logout();
+    navigate("/");
+  }
 
   async function getCroppedImg(src: string, pixels: Area): Promise<File> {
     const img = await new Promise<HTMLImageElement>((res, rej) => {
@@ -567,6 +574,16 @@ export default function ProfilePage() {
           )}
         </div>
       )}
+
+      {/* ── Logout ── */}
+      <div className="mt-6 mb-2 sm:hidden text-center">
+        <button
+          onClick={handleLogout}
+          className="text-xs text-gray-400 hover:text-gray-500 transition-colors"
+        >
+          登出
+        </button>
+      </div>
 
       {/* ── Crop Modal ──────────────────────────────────────────────────────── */}
       {cropSrc && (
