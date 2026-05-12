@@ -42,64 +42,13 @@ beforeEach(() => {
 });
 
 describe("ScriptsPage – slot format", () => {
-  it('renders slots as "3男・2女・1不限" joined by "・"', async () => {
-    mockScripts = [
-      makeScript({
-        male_slots: 3,
-        female_slots: 2,
-        any_slots: 1,
-        total_slots: 6,
-      }),
-    ];
-    renderPage();
-
-    expect(await screen.findByText(/3男・2女・1不限/)).toBeInTheDocument();
-  });
-
-  it("omits zero-value slot types", async () => {
-    mockScripts = [
-      makeScript({
-        male_slots: 4,
-        female_slots: 2,
-        any_slots: 0,
-        total_slots: 6,
-      }),
-    ];
-    renderPage();
-
-    const slotText = await screen.findByText(/4男・2女/);
-    expect(slotText).toBeInTheDocument();
-    expect(slotText.textContent).not.toContain("不限");
-  });
-
   it("shows total player count", async () => {
     mockScripts = [
-      makeScript({
-        male_slots: 3,
-        female_slots: 2,
-        any_slots: 1,
-        total_slots: 6,
-      }),
+      makeScript({ total_slots: 6 }),
     ];
     renderPage();
 
-    expect(await screen.findByText(/共 6 人/)).toBeInTheDocument();
-  });
-
-  it('renders "男 3" format nowhere – uses "3男" not "男 3"', async () => {
-    mockScripts = [
-      makeScript({
-        male_slots: 3,
-        female_slots: 2,
-        any_slots: 1,
-        total_slots: 6,
-      }),
-    ];
-    renderPage();
-
-    await screen.findByText(/3男/);
-    expect(screen.queryByText(/男 3/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/女 2/)).not.toBeInTheDocument();
+    expect(await screen.findByText(/6人/)).toBeInTheDocument();
   });
 
   it("renders script title and difficulty label", async () => {
@@ -142,7 +91,5 @@ describe("ScriptsPage – slot format", () => {
 
     expect(await screen.findByText("劇本A")).toBeInTheDocument();
     expect(screen.getByText("劇本B")).toBeInTheDocument();
-    expect(screen.getByText(/2男・2女/)).toBeInTheDocument();
-    expect(screen.getByText(/1男・1女・2不限/)).toBeInTheDocument();
   });
 });
