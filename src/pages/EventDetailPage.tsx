@@ -29,7 +29,39 @@ import {
 } from "../utils/labels";
 
 
-import { formatDate } from "../utils/formatDate";
+import { formatDate, formatDateShort } from "../utils/formatDate";
+import type { AuditLogEntry } from "../types";
+
+const AUDIT_FIELD_LABELS: Partial<Record<string, string>> = {
+  location: "地點",
+  status: "狀態",
+  scheduled_at: "時間",
+};
+
+function formatAuditValue(field: string, value: unknown): string {
+  if (field === "status") return (STATUS_LABELS as Record<string, string>)[String(value)] ?? String(value);
+  if (field === "scheduled_at") return formatDateShort(String(value));
+  return String(value ?? "");
+}
+
+function describeChanges(changes: Record<string, [unknown, unknown]>): string {
+  return Object.entries(changes)
+    .filter(([field]) => field in AUDIT_FIELD_LABELS)
+    .map(([field, [from, to]]) =>
+      `${AUDIT_FIELD_LABELS[field]}：${formatAuditValue(field, from)} → ${formatAuditValue(field, to)}`
+    )
+    .join("、");
+}
+
+function renderAuditAction(log: AuditLogEntry): string {
+  if (log.action === "created") return "建立了活動";
+  if (log.action === "deleted") return "刪除了活動";
+  if (log.action === "updated" && log.metadata.changes) {
+    const desc = describeChanges(log.metadata.changes);
+    return desc ? `更改了${desc}` : "更新了活動";
+  }
+  return log.action;
+}
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -842,26 +874,12 @@ export default function EventDetailPage() {
             {event.audit_logs.map((log, i) => (
               <div key={i} className="flex items-start justify-between text-sm">
                 <span className="text-gray-600">
-                  {log.action === "location_changed" && (
-                    <>
-                      <span className="font-medium">{log.user.nickname}</span>
-                      {" 更改地點："}
-                      <span className="line-through text-gray-400">
-                        {String(log.metadata.from ?? "")}
-                      </span>
-                      {" → "}
-                      <span>{String(log.metadata.to ?? "")}</span>
-                    </>
-                  )}
+                  <span className="font-medium">{log.user.nickname}</span>
+                  {" "}
+                  {renderAuditAction(log)}
                 </span>
                 <span className="text-xs text-gray-400 shrink-0 ml-3">
-                  {new Date(log.created_at).toLocaleString("zh-TW", {
-                    month: "2-digit",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: false,
-                  })}
+                  {formatDateShort(log.created_at)}
                 </span>
               </div>
             ))}
