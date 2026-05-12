@@ -44,58 +44,50 @@ function ScriptsTab() {
       {loading ? (
         <div className="text-center text-gray-400 py-16">載入中...</div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {scripts.map((script) => (
             <Link
               key={script.id}
               to={`/scripts/${script.id}`}
-              className="block bg-surface rounded-lg border border-gray-200 p-4 hover:border-brand-light hover:shadow-sm transition-all"
+              className="block group rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300"
             >
-              {script.cover_image_url && (
-                <img
-                  src={script.cover_image_url}
-                  alt={script.title}
-                  className="w-full h-32 object-cover rounded-md mb-3"
-                />
-              )}
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <h2 className="font-semibold text-gray-900 text-sm leading-tight">
-                  {script.title}
-                </h2>
+              <div className="relative aspect-[3/4] bg-gray-900">
+                {script.cover_image_url ? (
+                  <img
+                    src={script.cover_image_url}
+                    alt={script.title}
+                    className="w-full h-full object-cover object-center opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-600 text-4xl">
+                    📖
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
                 <span
-                  className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLORS[script.difficulty]}`}
+                  className={`absolute top-2.5 right-2.5 text-xs px-1.5 py-0.5 rounded font-medium ${DIFFICULTY_COLORS[script.difficulty]}`}
                 >
                   {DIFFICULTY_LABELS[script.difficulty]}
                 </span>
+                <div className="absolute bottom-0 left-0 right-0 p-3">
+                  <h2 className="font-semibold text-white text-xs leading-snug mb-1.5 line-clamp-2">
+                    {script.title}
+                  </h2>
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="flex gap-1 flex-wrap">
+                      {script.genres.slice(0, 2).map((g) => (
+                        <span key={g} className="text-xs text-white/65">
+                          {GENRE_LABELS[g]}
+                        </span>
+                      ))}
+                    </div>
+                    <span className="text-xs text-white/55 shrink-0">
+                      {script.total_slots}人
+                      {script.duration != null && ` · ${script.duration}h`}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-1 mb-2">
-                {script.genres.map((g) => (
-                  <span
-                    key={g}
-                    className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full"
-                  >
-                    {GENRE_LABELS[g]}
-                  </span>
-                ))}
-              </div>
-              <div className="text-xs text-gray-400">
-                {[
-                  script.male_slots ? `${script.male_slots}男` : "",
-                  script.female_slots ? `${script.female_slots}女` : "",
-                  script.any_slots ? `${script.any_slots}不限` : "",
-                ]
-                  .filter(Boolean)
-                  .join("・")}
-                ・共 {script.total_slots} 人
-                {script.duration != null && (
-                  <span className="ml-1">・⏱ {script.duration}h</span>
-                )}
-              </div>
-              {script.description && (
-                <p className="mt-2 text-xs text-gray-500 line-clamp-2">
-                  {script.description}
-                </p>
-              )}
             </Link>
           ))}
         </div>

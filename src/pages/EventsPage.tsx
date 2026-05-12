@@ -9,17 +9,7 @@ import {
 } from "../utils/labels";
 import type { Event } from "../types";
 import EventLocation from "../components/EventLocation";
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("zh-TW", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
+import { formatDate } from "../utils/formatDate";
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -59,81 +49,75 @@ export default function EventsPage() {
       ) : events.length === 0 ? (
         <div className="text-center text-gray-400 py-16">目前沒有活動</div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid sm:grid-cols-2 gap-4">
           {events.map((event) => (
             <Link
               key={event.id}
               to={`/events/${event.id}`}
-              className="block bg-surface rounded-lg border border-gray-200 p-4 hover:border-brand-light hover:shadow-sm transition-all"
+              className="flex gap-3 bg-surface rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow"
             >
-              <div className="flex items-start justify-between gap-4">
-                {event.script.cover_image_url ? (
-                  <img
-                    src={event.script.cover_image_url}
-                    alt={event.script.title}
-                    className="w-16 h-24 object-cover rounded shadow-sm shrink-0"
-                  />
-                ) : (
-                  <div className="w-16 h-24 bg-gray-100 rounded border border-gray-200 shrink-0 flex items-center justify-center text-gray-400 text-xs">
-                    無封面
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-gray-900">
+              <div className="w-[72px] shrink-0">
+                <div className="aspect-[2/3] rounded-lg overflow-hidden bg-gray-100">
+                  {event.script.cover_image_url ? (
+                    <img
+                      src={event.script.cover_image_url}
+                      alt={event.script.title}
+                      className="w-full h-full object-cover object-center"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300 text-2xl">
+                      📖
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                <div>
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <h2 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">
                       {event.script.title}
-                    </span>
+                    </h2>
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[event.status]}`}
+                      className={`text-xs px-1.5 py-0.5 rounded font-medium shrink-0 ${STATUS_COLORS[event.status]}`}
                     >
                       {STATUS_LABELS[event.status]}
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-1 mb-1">
-                    <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">
+                  <div className="flex flex-wrap gap-1">
+                    <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
                       {DIFFICULTY_LABELS[event.script.difficulty]}
                     </span>
-                    {event.script.genres.map((g) => (
+                    {event.script.genres.slice(0, 3).map((g) => (
                       <span
                         key={g}
-                        className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full"
+                        className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded"
                       >
                         {GENRE_LABELS[g]}
                       </span>
                     ))}
-                    {event.allow_cross_gender ? (
-                      <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium">
-                        開放反串
+                    {event.allow_cross_gender && (
+                      <span className="text-xs bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded font-medium">
+                        反串
                       </span>
-                    ) : event.script.male_slots > 0 ||
-                      event.script.female_slots > 0 ? (
-                      <span className="text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full">
-                        不反串
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="text-xs text-gray-400 mb-0.5">
-                    {[
-                      event.script.store?.name,
-                      event.script.version_name,
-                      event.script.duration != null
-                        ? `${event.script.duration}h`
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join("・")}
-                  </p>
-                  <div className="text-sm text-gray-500 space-y-0.5">
-                    <div>{formatDate(event.scheduled_at)}</div>
-                    <EventLocation address={event.address} location={event.location} />
-                    <div>主辦：{event.host.nickname}</div>
+                    )}
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="text-lg font-semibold text-gray-900">
-                    {event.confirmed_count} / {event.script.total_slots}
+
+                <div className="mt-2 space-y-0.5 text-xs text-gray-500">
+                  <div className="font-medium text-gray-700">
+                    {formatDate(event.scheduled_at)}
                   </div>
-                  <div className="text-xs text-gray-400">已確認 / 總人數</div>
+                  <EventLocation address={event.address} location={event.location} />
+                  <div className="flex items-center justify-between pt-0.5">
+                    <span className="text-gray-400">{event.host.nickname}</span>
+                    <span className="font-semibold text-gray-800 tabular-nums">
+                      {event.confirmed_count}
+                      <span className="font-normal text-gray-400">
+                        /{event.script.total_slots} 人
+                      </span>
+                    </span>
+                  </div>
                 </div>
               </div>
             </Link>

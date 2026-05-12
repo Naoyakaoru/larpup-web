@@ -1,9 +1,14 @@
 import type { Address } from "../types";
 import { REGION_LABELS } from "../utils/labels";
 
-function isUrl(s: string | null | undefined): boolean {
+function isSafeUrl(s: string | null | undefined): boolean {
   if (!s) return false;
-  return s.startsWith("http://") || s.startsWith("https://");
+  try {
+    const url = new URL(s);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 function PinIcon() {
@@ -32,10 +37,10 @@ interface Props {
 export default function EventLocation({ address, location, className = "" }: Props) {
   if (address) {
     const text = `${REGION_LABELS[address.region as keyof typeof REGION_LABELS] ?? address.region}·${address.name}`;
-    if (address.map_url) {
+    if (isSafeUrl(address.map_url)) {
       return (
         <a
-          href={address.map_url}
+          href={address.map_url!}
           target="_blank"
           rel="noopener noreferrer"
           className={`inline-flex items-center text-brand hover:underline ${className}`}
@@ -54,7 +59,7 @@ export default function EventLocation({ address, location, className = "" }: Pro
 
   if (!location) return null;
 
-  if (isUrl(location)) {
+  if (isSafeUrl(location)) {
     return (
       <a
         href={location}

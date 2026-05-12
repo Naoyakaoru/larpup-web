@@ -46,7 +46,7 @@ export default function ScriptDetailPage() {
           <img
             src={script.cover_image_url}
             alt={script.title}
-            className="w-full h-48 object-cover"
+            className="w-full h-72 object-cover object-center"
           />
         )}
         <div className="p-6">

@@ -4,11 +4,7 @@ import { getUserProfile } from '../api/users'
 import type { PublicProfile } from '../types'
 import { EVENT_STATUS_LABELS as STATUS_LABELS } from '../utils/labels'
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('zh-TW', {
-    month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false,
-  })
-}
+import { formatDateShort as formatDate } from '../utils/formatDate'
 
 export default function UserProfilePage() {
   const { handle } = useParams<{ handle: string }>()

@@ -45,15 +45,7 @@ function buildLineLoginUrl(): string {
   return `https://access.line.me/oauth2/v2.1/authorize?${params.toString()}`;
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("zh-TW", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
+import { formatDateShort as formatDate } from "../utils/formatDate";
 
 function EventList({ events }: { events: Event[] }) {
   if (events.length === 0)

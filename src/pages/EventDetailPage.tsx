@@ -29,16 +29,7 @@ import {
 } from "../utils/labels";
 
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("zh-TW", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
+import { formatDate } from "../utils/formatDate";
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -618,9 +609,9 @@ export default function EventDetailPage() {
                             </span>
                           )}
                           <span
-                            className={`text-xs w-5 h-5 rounded-full inline-flex items-center justify-center font-medium ${m.user.gender === "male" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"}`}
+                            className={`text-xs w-5 h-5 rounded-full inline-flex items-center justify-center font-medium shrink-0 leading-none ${m.user.gender === "male" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"}`}
                           >
-                            {m.user.gender === "male" ? "♂" : "♀"}
+                            {m.user.gender === "male" ? "♂︎" : "♀︎"}
                           </span>
                           {m.cross_gender && (
                             <span className="text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded">
@@ -741,8 +732,8 @@ export default function EventDetailPage() {
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-1.5">
                       <span className="text-gray-400 italic">線下成員</span>
-                      <span className="text-xs w-5 h-5 rounded-full inline-flex items-center justify-center font-medium bg-blue-100 text-blue-600">
-                        ♂
+                      <span className="text-xs w-5 h-5 rounded-full inline-flex items-center justify-center font-medium shrink-0 leading-none bg-blue-100 text-blue-600">
+                        ♂︎
                       </span>
                     </div>
                     <span className="text-gray-400 text-xs">已確認</span>
@@ -757,8 +748,8 @@ export default function EventDetailPage() {
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-1.5">
                       <span className="text-gray-400 italic">線下成員</span>
-                      <span className="text-xs w-5 h-5 rounded-full inline-flex items-center justify-center font-medium bg-pink-100 text-pink-600">
-                        ♀
+                      <span className="text-xs w-5 h-5 rounded-full inline-flex items-center justify-center font-medium shrink-0 leading-none bg-pink-100 text-pink-600">
+                        ♀︎
                       </span>
                     </div>
                     <span className="text-gray-400 text-xs">已確認</span>
@@ -789,9 +780,9 @@ export default function EventDetailPage() {
                             {showName ? m.user.nickname : "匿名"}
                           </span>
                           <span
-                            className={`text-xs w-5 h-5 rounded-full inline-flex items-center justify-center font-medium ${m.user.gender === "male" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"}`}
+                            className={`text-xs w-5 h-5 rounded-full inline-flex items-center justify-center font-medium shrink-0 leading-none ${m.user.gender === "male" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"}`}
                           >
-                            {m.user.gender === "male" ? "♂" : "♀"}
+                            {m.user.gender === "male" ? "♂︎" : "♀︎"}
                           </span>
                         </div>
                         <span className="text-gray-400 text-xs">
