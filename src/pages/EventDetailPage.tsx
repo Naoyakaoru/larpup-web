@@ -877,7 +877,7 @@ export default function EventDetailPage() {
         )}
 
       {event.audit_logs && event.audit_logs.length > 0 && (
-        <div className="bg-surface rounded-lg border border-gray-200 p-6">
+        <div className="bg-surface rounded-lg border border-gray-200 p-6 mt-4">
           <h2 className="font-semibold text-gray-900 mb-3">變更紀錄</h2>
           <div className="space-y-2">
             {event.audit_logs.map((log, i) => {
