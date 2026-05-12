@@ -41,21 +41,33 @@ const AUDIT_FIELD_LABELS: Partial<Record<string, string>> = {
 };
 
 
-function describeChanges(changes: Record<string, [unknown, unknown]>): string {
-  return Object.entries(changes)
-    .filter(([field]) => field in AUDIT_FIELD_LABELS)
-    .map(([field]) => AUDIT_FIELD_LABELS[field]!)
-    .join("、");
+function formatAuditValue(field: string, value: unknown): string {
+  if (field === "status") return (STATUS_LABELS as Record<string, string>)[String(value)] ?? String(value);
+  if (field === "scheduled_at") return formatDateShort(String(value));
+  return String(value ?? "");
 }
 
-function renderAuditAction(log: AuditLogEntry): string {
+function auditSummary(log: AuditLogEntry): string {
   if (log.action === "created") return "建立了活動";
   if (log.action === "deleted") return "刪除了活動";
   if (log.action === "updated" && log.metadata.changes) {
-    const desc = describeChanges(log.metadata.changes);
-    return desc ? `更改了${desc}` : "更新了活動";
+    const fields = Object.keys(log.metadata.changes)
+      .filter(f => f in AUDIT_FIELD_LABELS)
+      .map(f => AUDIT_FIELD_LABELS[f]!)
+      .join("、");
+    return fields ? `更改了${fields}` : "更新了活動";
   }
   return log.action;
+}
+
+function auditDetails(changes: Record<string, [unknown, unknown]>): { label: string; from: string; to: string }[] {
+  return Object.entries(changes)
+    .filter(([field]) => field in AUDIT_FIELD_LABELS)
+    .map(([field, [from, to]]) => ({
+      label: AUDIT_FIELD_LABELS[field]!,
+      from: formatAuditValue(field, from),
+      to: formatAuditValue(field, to),
+    }));
 }
 
 export default function EventDetailPage() {
@@ -77,6 +89,7 @@ export default function EventDetailPage() {
   const [editScriptVersionId, setEditScriptVersionId] = useState<number | null>(
     null,
   );
+  const [expandedLogs, setExpandedLogs] = useState<Set<number>>(new Set());
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -866,18 +879,47 @@ export default function EventDetailPage() {
         <div className="bg-surface rounded-lg border border-gray-200 p-6">
           <h2 className="font-semibold text-gray-900 mb-3">變更紀錄</h2>
           <div className="space-y-2">
-            {event.audit_logs.map((log, i) => (
-              <div key={i} className="flex items-start justify-between text-sm">
-                <span className="text-gray-600">
-                  <span className="font-medium">{log.user.nickname}</span>
-                  {" "}
-                  {renderAuditAction(log)}
-                </span>
-                <span className="text-xs text-gray-400 shrink-0 ml-3">
-                  {formatDateShort(log.created_at)}
-                </span>
-              </div>
-            ))}
+            {event.audit_logs.map((log, i) => {
+              const details = log.action === "updated" && log.metadata.changes
+                ? auditDetails(log.metadata.changes)
+                : [];
+              const expanded = expandedLogs.has(i);
+              return (
+                <div key={i}>
+                  <div
+                    className={`flex items-start justify-between text-sm ${details.length ? "cursor-pointer select-none" : ""}`}
+                    onClick={() => {
+                      if (!details.length) return;
+                      setExpandedLogs(prev => {
+                        const next = new Set(prev);
+                        next.has(i) ? next.delete(i) : next.add(i);
+                        return next;
+                      });
+                    }}
+                  >
+                    <span className="text-gray-600">
+                      <span className="font-medium">{log.user.nickname}</span>
+                      {" "}{auditSummary(log)}
+                      {details.length > 0 && (
+                        <span className="ml-1 text-gray-400 text-xs">{expanded ? "▲" : "▼"}</span>
+                      )}
+                    </span>
+                    <span className="text-xs text-gray-400 shrink-0 ml-3">
+                      {formatDateShort(log.created_at)}
+                    </span>
+                  </div>
+                  {expanded && (
+                    <div className="mt-1 ml-0 space-y-0.5">
+                      {details.map(({ label, from, to }) => (
+                        <div key={label} className="text-xs text-gray-400">
+                          {label}：{from} → {to}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
