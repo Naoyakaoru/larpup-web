@@ -97,6 +97,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
       price: null,
       store: null,
       version_name: null,
+      cover_image_url: null,
     },
     host: { id: HOST.id, handle: HOST.handle, nickname: HOST.nickname },
     script_version_id: 1,
