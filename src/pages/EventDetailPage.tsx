@@ -40,18 +40,11 @@ const AUDIT_FIELD_LABELS: Partial<Record<string, string>> = {
   offline_female: "線下成員 ♀︎",
 };
 
-function formatAuditValue(field: string, value: unknown): string {
-  if (field === "status") return (STATUS_LABELS as Record<string, string>)[String(value)] ?? String(value);
-  if (field === "scheduled_at") return formatDateShort(String(value));
-  return String(value ?? "");
-}
 
 function describeChanges(changes: Record<string, [unknown, unknown]>): string {
   return Object.entries(changes)
     .filter(([field]) => field in AUDIT_FIELD_LABELS)
-    .map(([field, [from, to]]) =>
-      `${AUDIT_FIELD_LABELS[field]}：${formatAuditValue(field, from)} → ${formatAuditValue(field, to)}`
-    )
+    .map(([field]) => AUDIT_FIELD_LABELS[field]!)
     .join("、");
 }
 
