@@ -576,10 +576,10 @@ export default function ProfilePage() {
       )}
 
       {/* ── Logout ── */}
-      <div className="mt-8 sm:hidden">
+      <div className="mt-6 mb-2 sm:hidden text-center">
         <button
           onClick={handleLogout}
-          className="w-full py-2.5 text-sm text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+          className="text-xs text-gray-400 hover:text-gray-500 transition-colors"
         >
           登出
         </button>
