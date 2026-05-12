@@ -497,6 +497,7 @@ export default function CreateEventPage() {
             onChange={setScheduledAt}
             onFocus={(e) => e.target.blur()}
             showTimeSelect
+            fixedHeight
             timeIntervals={30}
             dateFormat="yyyy/MM/dd HH:mm"
             timeFormat="HH:mm"
