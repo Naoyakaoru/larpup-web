@@ -36,6 +36,8 @@ const AUDIT_FIELD_LABELS: Partial<Record<string, string>> = {
   location: "地點",
   status: "狀態",
   scheduled_at: "時間",
+  offline_male: "線下成員 ♂︎",
+  offline_female: "線下成員 ♀︎",
 };
 
 function formatAuditValue(field: string, value: unknown): string {
