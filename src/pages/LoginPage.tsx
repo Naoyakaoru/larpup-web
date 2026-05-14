@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { useTheme } from '../contexts/ThemeContext'
 import { GoogleLogin } from '@react-oauth/google'
 import * as authApi from '../api/auth'
 import type { AuthResponse, SsoPendingResponse } from '../types'
@@ -73,7 +72,6 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
-  const { isDark } = useTheme()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { useTheme } from "../contexts/ThemeContext";
 import { GoogleLogin } from "@react-oauth/google";
 import * as authApi from "../api/auth";
 import { recordConsent } from "../api/consents";
@@ -121,7 +120,6 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-  const { isDark } = useTheme();
   const navigate = useNavigate();
 
   // Helper: fire consent records after a token is available.
