@@ -44,7 +44,7 @@ function SsoButton({
       onClick={onClick}
       disabled={disabled}
       style={{ fontFamily: '"Google Sans", Roboto, Arial, sans-serif' }}
-      className={`w-full flex items-center justify-center h-[40px] rounded-[4px] text-[14px] font-medium tracking-[0.25px] disabled:opacity-50 transition-colors overflow-hidden ${className}`}
+      className={`w-full flex items-center justify-center h-[32px] rounded-[4px] text-[14px] font-medium tracking-[0.25px] disabled:opacity-50 transition-colors overflow-hidden ${className}`}
     >
       {/* Inner wrapper — 對應 Google 的 nsm7Bb div，左右各 13px padding */}
       <div className="flex items-center gap-2 flex-1 px-[13px]">
@@ -157,7 +157,7 @@ export default function LoginPage() {
             onError={() => setError('Google 登入取消或失敗')}
             text="signin_with"
             theme={isDark ? 'filled_black' : 'outline'}
-            size="large"
+            size="medium"
             width="300"
             shape="rectangular"
           />
