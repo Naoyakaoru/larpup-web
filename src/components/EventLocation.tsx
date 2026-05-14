@@ -11,13 +11,13 @@ function isSafeUrl(s: string | null | undefined): boolean {
   }
 }
 
-function PinIcon() {
+function PinIcon({ className = "" }: { className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="currentColor"
-      className="inline-block w-3.5 h-3.5 mr-0.5 -mt-0.5"
+      className={`inline-block w-4 h-4 mr-0.5 shrink-0 ${className}`}
     >
       <path
         fillRule="evenodd"
@@ -43,16 +43,16 @@ export default function EventLocation({ address, location, className = "" }: Pro
           href={address.map_url!}
           target="_blank"
           rel="noopener noreferrer"
-          className={`inline-flex items-center text-brand hover:underline ${className}`}
+          className={`inline-flex items-start text-left max-w-full text-brand hover:underline ${className}`}
           onClick={(e) => e.stopPropagation()}
         >
-          <PinIcon />{text}
+          <PinIcon className="mt-[1px]" /><span className="break-words leading-tight">{text}</span>
         </a>
       );
     }
     return (
-      <span className={`inline-flex items-center ${className}`}>
-        <PinIcon />{text}
+      <span className={`inline-flex items-start text-left max-w-full ${className}`}>
+        <PinIcon className="mt-[1px]" /><span className="break-words leading-tight">{text}</span>
       </span>
     );
   }

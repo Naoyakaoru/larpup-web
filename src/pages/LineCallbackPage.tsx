@@ -42,6 +42,7 @@ export default function LineCallbackPage() {
           sessionStorage.setItem('sso_temp_token', res.temp_token)
           sessionStorage.setItem('sso_email', res.email)
           sessionStorage.setItem('sso_nickname', res.nickname)
+          sessionStorage.setItem('sso_source', 'line_login')
           navigate('/register?sso=1')
         }
       })

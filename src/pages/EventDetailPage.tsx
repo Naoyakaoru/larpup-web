@@ -271,7 +271,7 @@ export default function EventDetailPage() {
         <div className="flex items-start justify-between mb-4">
           <Link
             to={`/scripts/${event.script.id}`}
-            className="text-xl font-bold text-gray-900 hover:text-brand transition-colors"
+            className="text-xl font-bold text-gray-900 hover:text-brand transition-colors text-balance leading-snug"
           >
             {event.script.title}
           </Link>
@@ -380,6 +380,7 @@ export default function EventDetailPage() {
                         onChange={setEditScheduledAt}
                         onFocus={(e) => e.target.blur()}
                         showTimeSelect
+                        fixedHeight
                         timeIntervals={30}
                         dateFormat="yyyy/MM/dd HH:mm"
                         timeFormat="HH:mm"
@@ -876,7 +877,7 @@ export default function EventDetailPage() {
         )}
 
       {event.audit_logs && event.audit_logs.length > 0 && (
-        <div className="bg-surface rounded-lg border border-gray-200 p-6">
+        <div className="bg-surface rounded-lg border border-gray-200 p-6 mt-4">
           <h2 className="font-semibold text-gray-900 mb-3">變更紀錄</h2>
           <div className="space-y-2">
             {event.audit_logs.map((log, i) => {
