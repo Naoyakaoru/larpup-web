@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { GoogleLogin } from '@react-oauth/google'
 import * as authApi from '../api/auth'
 import type { AuthResponse, SsoPendingResponse } from '../types'
 
-const LINE_CHANNEL_ID   = import.meta.env.VITE_LINE_CHANNEL_ID as string
+const LINE_CHANNEL_ID = import.meta.env.VITE_LINE_CHANNEL_ID as string
 const LINE_REDIRECT_URI = import.meta.env.VITE_LINE_REDIRECT_URI as string
 
 function buildLineLoginUrl(): string {
@@ -61,24 +62,25 @@ function SsoButton({
 function LineIcon() {
   return (
     <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M22 10.06C22 5.5 17.52 1.82 12 1.82S2 5.5 2 10.06c0 4.1 3.64 7.53 8.56 8.18.33.07.78.22.9.5.1.26.07.66.03.92l-.14.86c-.04.26-.2 1.02.9.55 1.1-.46 5.9-3.48 8.05-5.96C21.27 13.31 22 11.76 22 10.06z"/>
+      <path d="M22 10.06C22 5.5 17.52 1.82 12 1.82S2 5.5 2 10.06c0 4.1 3.64 7.53 8.56 8.18.33.07.78.22.9.5.1.26.07.66.03.92l-.14.86c-.04.26-.2 1.02.9.55 1.1-.46 5.9-3.48 8.05-5.96C21.27 13.31 22 11.76 22 10.06z" />
     </svg>
   )
 }
 
 export default function LoginPage() {
-  const [email, setEmail]       = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
-  const { login }               = useAuth()
-  const navigate                = useNavigate()
-  const [searchParams]          = useSearchParams()
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { login } = useAuth()
+  const { isDark } = useTheme()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const errorMap: Record<string, string> = {
-    line_cancelled:      'LINE 登入已取消',
+    line_cancelled: 'LINE 登入已取消',
     line_state_mismatch: '登入驗證失敗，請再試一次',
-    line_failed:         'LINE 登入失敗，請再試一次',
+    line_failed: 'LINE 登入失敗，請再試一次',
   }
   const urlError = searchParams.get('error')
 
@@ -154,9 +156,11 @@ export default function LoginPage() {
             onSuccess={handleGoogleSuccess}
             onError={() => setError('Google 登入取消或失敗')}
             text="signin_with"
-            theme="outline"
+            theme={isDark ? 'filled_black' : 'outline'}
             size="large"
             width="300"
+            shape="rectangular"
+            logo_alignment="center"
           />
         </div>
       </div>
