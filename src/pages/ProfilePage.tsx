@@ -35,6 +35,7 @@ const LINE_REDIRECT_URI = import.meta.env.VITE_LINE_REDIRECT_URI as string;
 function buildLineLoginUrl(): string {
   const state = crypto.randomUUID();
   sessionStorage.setItem("line_oauth_state", state);
+  sessionStorage.setItem('line_return_to', '/profile');
   const params = new URLSearchParams({
     response_type: "code",
     client_id: LINE_CHANNEL_ID,

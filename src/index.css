@@ -100,6 +100,19 @@ select {
   font-size: max(16px, 1em);
 }
 
+/* Global Select Design System — Custom Chevron aligned exactly like the Accordion */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  /* Tailwind gray-400 #9ca3af */
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%239ca3af'%3e%3cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3e%3c/svg%3e");
+  background-position: right 0.875rem center; /* Equivalent to pr-3.5 */
+  background-repeat: no-repeat;
+  background-size: 1rem 1rem; /* Equivalent to w-4 h-4 */
+  padding-right: 2.5rem; /* Ensure text doesn't overlap chevron */
+}
+
 /* Prevent scroll wheel from changing number input values */
 input[type='number'] {
   -moz-appearance: textfield;
@@ -116,6 +129,11 @@ input[type='number']::-webkit-inner-spin-button {
   background-color: #1e293b;
   color: #e5e7eb;
   border-color: #334155;
+}
+
+/* Update chevron color for Dark Mode (gray-400 in dark is #94a3b8) */
+.dark select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394a3b8'%3e%3cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3e%3c/svg%3e");
 }
 .dark input::placeholder,
 .dark textarea::placeholder {
