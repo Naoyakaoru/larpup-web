@@ -32,14 +32,12 @@ function SsoButton({
       style={{ fontFamily: '"Google Sans", Roboto, Arial, sans-serif' }}
       className={`w-full flex items-center justify-center h-[40px] rounded-[4px] text-[14px] font-medium tracking-[0.25px] disabled:opacity-50 transition-colors overflow-hidden ${className}`}
     >
-      {/* Inner wrapper — 對應 Google 的 nsm7Bb div，左右各 13px padding */}
-      <div className="flex items-center gap-2 flex-1 px-[13px]">
-        {/* Icon 置左，18×18px */}
+      {/* 讓 Icon 與文字靠攏並整體置中，對應 Google 的 logo_alignment="center" */}
+      <div className="flex items-center justify-center gap-2">
         <div className="w-[18px] h-[18px] flex items-center justify-center shrink-0">
           {icon}
         </div>
-        {/* 文字佔滿剩餘空間，在剩餘寬度內置中 */}
-        <span className="flex-1 text-center leading-none">{label}</span>
+        <span className="leading-none">{label}</span>
       </div>
     </button>
   );
