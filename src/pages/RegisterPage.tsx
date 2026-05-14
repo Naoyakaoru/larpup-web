@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { GoogleLogin } from "@react-oauth/google";
 import * as authApi from "../api/auth";
+import { recordConsent } from "../api/consents";
 import type { AuthResponse, SsoPendingResponse } from "../types";
 
 // ── Shared SSO button (icon + text both centred) ────────────────────────────
@@ -55,6 +56,39 @@ function GoogleIcon() {
   );
 }
 
+function DocumentIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+      <polyline points="10 9 9 9 8 9" />
+    </svg>
+  );
+}
+
+function ShieldCheckIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <polyline points="9 12 11 14 15 10" />
+    </svg>
+  );
+}
+
+function ScaleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+      <path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+      <path d="M7 21h10" />
+      <path d="M12 3v18" />
+      <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
+    </svg>
+  );
+}
+
 const LINE_CHANNEL_ID   = import.meta.env.VITE_LINE_CHANNEL_ID as string;
 const LINE_REDIRECT_URI = import.meta.env.VITE_LINE_REDIRECT_URI as string;
 
@@ -82,13 +116,26 @@ export default function RegisterPage() {
     nickname: "",
     gender: "",
   });
-  const [tempToken, setTempToken] = useState("");
-  const [error, setError]         = useState("");
-  const [loading, setLoading]     = useState(false);
-  const { login }                 = useAuth();
-  const { isDark }                = useTheme();
-  const navigate                  = useNavigate();
-  const googleBtnRef              = useRef<HTMLDivElement>(null);
+  const [tempToken, setTempToken]       = useState("");
+  const [consentChecked, setConsent]    = useState(false);
+  const [consentSource, setConsentSrc]  = useState<string>("web_signup");
+  const [showTerms, setShowTerms]       = useState(false);
+  const [error, setError]               = useState("");
+  const [loading, setLoading]           = useState(false);
+  const { login }                       = useAuth();
+  const { isDark }                      = useTheme();
+  const navigate                        = useNavigate();
+  const googleBtnRef                    = useRef<HTMLDivElement>(null);
+
+  // Helper: fire consent records after a token is available.
+  // login() already stored the token in localStorage, so recordConsent() will pick it up automatically.
+  async function recordRegistrationConsents(_token: string, source: string) {
+    const version = "2026-05";
+    await Promise.allSettled([
+      recordConsent({ consent_type: "privacy_policy",   consent_version: version, accepted: true, source }),
+      recordConsent({ consent_type: "terms_of_service", consent_version: version, accepted: true, source }),
+    ]);
+  }
 
   // Pre-fill SSO data from sessionStorage
   useEffect(() => {
@@ -96,8 +143,10 @@ export default function RegisterPage() {
     const token    = sessionStorage.getItem("sso_temp_token") ?? "";
     const email    = sessionStorage.getItem("sso_email") ?? "";
     const nickname = sessionStorage.getItem("sso_nickname") ?? "";
+    const source   = sessionStorage.getItem("sso_source") ?? "web_signup";
     if (!token) { navigate("/login"); return; }
     setTempToken(token);
+    setConsentSrc(source);
     setForm(f => ({ ...f, email, nickname }));
   }, [isSso, navigate]);
 
@@ -108,6 +157,10 @@ export default function RegisterPage() {
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
+    if (!consentChecked) {
+      setError("請先同意隱私政策與服務條款");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
@@ -116,12 +169,15 @@ export default function RegisterPage() {
         sessionStorage.removeItem("sso_temp_token");
         sessionStorage.removeItem("sso_email");
         sessionStorage.removeItem("sso_nickname");
+        sessionStorage.removeItem("sso_source");
         login(res.token, res.user);
+        await recordRegistrationConsents(res.token, consentSource);
       } else {
         const res = await authApi.register(
           form.email, form.password, form.passwordConfirmation, form.nickname, form.gender,
         );
         login(res.token, res.user);
+        await recordRegistrationConsents(res.token, "web_signup");
       }
       navigate("/");
     } catch (err) {
@@ -131,14 +187,17 @@ export default function RegisterPage() {
     }
   }
 
-  function handleSsoResponse(res: AuthResponse | SsoPendingResponse) {
+  function handleSsoResponse(res: AuthResponse | SsoPendingResponse, source: string) {
     if ("token" in res) {
+      // Existing SSO user logging in — no new consent needed
       login(res.token, res.user);
       navigate("/");
     } else {
+      // New SSO user — needs to complete profile; remember source for consent
       sessionStorage.setItem("sso_temp_token", res.temp_token);
       sessionStorage.setItem("sso_email", res.email);
       sessionStorage.setItem("sso_nickname", res.nickname);
+      sessionStorage.setItem("sso_source", source);
       navigate("/register?sso=1");
     }
   }
@@ -203,7 +262,7 @@ export default function RegisterPage() {
                   setLoading(true); setError("");
                   try {
                     const res: AuthResponse | SsoPendingResponse = await authApi.ssoGoogle(idToken);
-                    handleSsoResponse(res);
+                    handleSsoResponse(res, "oauth_google");
                   } catch (err) {
                     setError(err instanceof Error ? err.message : "Google 登入失敗");
                   } finally { setLoading(false); }
@@ -310,9 +369,84 @@ export default function RegisterPage() {
           </>
         )}
 
+        {/* Consent accordion + checkbox */}
+        <div className="rounded-lg border border-gray-200 overflow-hidden bg-surface shadow-sm">
+          {/* Header: toggle button */}
+          <button
+            type="button"
+            id="reg-terms-toggle"
+            onClick={() => setShowTerms(v => !v)}
+            className="w-full flex items-center justify-between px-3.5 py-3 hover:bg-surface-2 transition-colors text-left"
+          >
+            <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+              <DocumentIcon className="w-4 h-4 text-brand" /> 閱讀隱私政策與服務條款
+            </span>
+            <svg
+              className={`w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0 ${showTerms ? "rotate-180" : ""}`}
+              viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
+            >
+              <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+            </svg>
+          </button>
+
+          {/* Expandable content */}
+          {showTerms && (
+            <div className="px-4 py-4 text-xs text-gray-600 leading-relaxed space-y-5 border-t border-gray-100 max-h-64 overflow-y-auto bg-surface-2">
+              <section>
+                <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-1.5">
+                  <ShieldCheckIcon className="w-4 h-4 text-brand" /> 隱私政策摘要
+                </h3>
+                <ul className="space-y-1.5 list-disc list-inside text-gray-500 marker:text-gray-400">
+                  <li>我們蒐集您的 Email、暱稱及性別，用於帳號管理與服務提供。</li>
+                  <li>您的個人資料不會在未經同意的情況下出售或分享給第三方。</li>
+                  <li>我們使用 Cookie 改善使用體驗，您可隨時在瀏覽器設定中關閉。</li>
+                  <li>您有權要求查閱、更正或刪除您的個人資料，請聯繫客服。</li>
+                  <li>資料存放於具備安全措施的伺服器，並依法規保存必要記錄。</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-1.5">
+                  <ScaleIcon className="w-4 h-4 text-brand" /> 服務條款摘要
+                </h3>
+                <ul className="space-y-1.5 list-disc list-inside text-gray-500 marker:text-gray-400">
+                  <li>Larpup 為桌上 LARP 活動媒合平台，帳號限個人使用，禁止冒用他人身分。</li>
+                  <li>您對所上傳的內容擁有著作權；平台展示之劇本圖文素材版權皆歸原發行商所有。</li>
+                  <li>禁止發布違法、騷擾或歧視性內容，違者將停權處理。</li>
+                  <li>平台保留隨時修改功能與條款的權利，修改後將以公告或 Email 通知。</li>
+                  <li>因不可抗力或第三方服務問題造成的損失，平台不負賠償責任。</li>
+                </ul>
+              </section>
+
+              <div className="pt-2">
+                <p className="text-gray-400 text-[11px] bg-surface p-2 rounded border border-gray-100 text-center">
+                  完整版本請參閱{" "}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline font-medium">隱私政策</a>
+                  {" "}與{" "}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline font-medium">服務條款</a>。
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Checkbox row */}
+          <label className="flex items-center gap-3 cursor-pointer select-none px-3.5 py-3 border-t border-gray-200 bg-surface hover:bg-surface-2 transition-colors">
+            <input
+              id="reg-consent"
+              type="checkbox"
+              checked={consentChecked}
+              onChange={(e) => { setConsent(e.target.checked); if (e.target.checked) setError(""); }}
+              className="w-4 h-4 accent-brand rounded shrink-0 border-gray-300 focus:ring-brand"
+            />
+            <span className="text-sm font-medium text-gray-700">
+              我已閱讀並同意上述條款
+            </span>
+          </label>
+        </div>
+
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !consentChecked}
           className="w-full bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-hover disabled:opacity-50"
         >
           {loading ? "處理中..." : isSso ? "完成建立帳號" : "建立帳號"}

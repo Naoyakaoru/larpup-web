@@ -271,7 +271,7 @@ export default function EventDetailPage() {
         <div className="flex items-start justify-between mb-4">
           <Link
             to={`/scripts/${event.script.id}`}
-            className="text-xl font-bold text-gray-900 hover:text-brand transition-colors"
+            className="text-xl font-bold text-gray-900 hover:text-brand transition-colors text-balance leading-snug"
           >
             {event.script.title}
           </Link>

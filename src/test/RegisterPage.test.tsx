@@ -38,10 +38,16 @@ vi.mock("../api/auth", () => ({
   ssoRegister: vi.fn(),
 }));
 
+vi.mock("../api/consents", () => ({
+  recordConsent: vi.fn(),
+}));
+
 import * as authApi from "../api/auth";
+import { recordConsent } from "../api/consents";
 const mockRegister    = vi.mocked(authApi.register);
 const mockSsoGoogle   = vi.mocked(authApi.ssoGoogle);
 const mockSsoRegister = vi.mocked(authApi.ssoRegister);
+const mockRecordConsent = vi.mocked(recordConsent);
 
 // ── Mock AuthContext ───────────────────────────────────────────────────────
 const mockAuthLogin = vi.fn();
@@ -98,10 +104,13 @@ describe("RegisterPage – normal mode", () => {
     await userEvent.selectOptions(screen.getByLabelText(/性別/), "female");
     await userEvent.type(screen.getByLabelText(/^密碼/), "password123");
     await userEvent.type(screen.getByLabelText(/確認密碼/), "password123");
+    await userEvent.click(screen.getByRole("checkbox", { name: /我已閱讀並同意/ }));
     await userEvent.click(screen.getByRole("button", { name: "建立帳號" }));
 
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/"));
     expect(mockAuthLogin).toHaveBeenCalledWith("jwt", expect.objectContaining({ email: "new@example.com" }));
+    expect(mockRecordConsent).toHaveBeenCalledWith(expect.objectContaining({ consent_type: "privacy_policy", source: "web_signup" }));
+    expect(mockRecordConsent).toHaveBeenCalledWith(expect.objectContaining({ consent_type: "terms_of_service", source: "web_signup" }));
   });
 
   it("shows error on registration failure", async () => {
@@ -113,11 +122,23 @@ describe("RegisterPage – normal mode", () => {
     await userEvent.selectOptions(screen.getByLabelText(/性別/), "male");
     await userEvent.type(screen.getByLabelText(/^密碼/), "pass1234");
     await userEvent.type(screen.getByLabelText(/確認密碼/), "pass1234");
+    await userEvent.click(screen.getByRole("checkbox", { name: /我已閱讀並同意/ }));
     await userEvent.click(screen.getByRole("button", { name: "建立帳號" }));
 
     await waitFor(() =>
       expect(screen.getByText("Email 已被使用")).toBeInTheDocument(),
     );
+  });
+  
+  it("shows error if consent is not checked", async () => {
+    renderPage();
+    await userEvent.type(screen.getByLabelText(/Email/), "new@example.com");
+    await userEvent.type(screen.getByLabelText(/^暱稱/), "NewUser");
+    await userEvent.selectOptions(screen.getByLabelText(/性別/), "female");
+    await userEvent.type(screen.getByLabelText(/^密碼/), "password123");
+    await userEvent.type(screen.getByLabelText(/確認密碼/), "password123");
+    // Do NOT check the consent box
+    expect(screen.getByRole("button", { name: "建立帳號" })).toBeDisabled();
   });
 });
 
@@ -188,6 +209,7 @@ describe("RegisterPage – SSO mode (?sso=1)", () => {
 
     renderPage("?sso=1");
     await userEvent.selectOptions(screen.getByLabelText(/性別/), "female");
+    await userEvent.click(screen.getByRole("checkbox", { name: /我已閱讀並同意/ }));
     await userEvent.click(screen.getByRole("button", { name: "完成建立帳號" }));
 
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/"));
@@ -197,6 +219,7 @@ describe("RegisterPage – SSO mode (?sso=1)", () => {
       "female",
       "SsoUser",
     );
+    expect(mockRecordConsent).toHaveBeenCalledWith(expect.objectContaining({ consent_type: "privacy_policy", source: "web_signup" }));
   });
 
   it("shows error when ssoRegister fails", async () => {
@@ -204,6 +227,7 @@ describe("RegisterPage – SSO mode (?sso=1)", () => {
 
     renderPage("?sso=1");
     await userEvent.selectOptions(screen.getByLabelText(/性別/), "male");
+    await userEvent.click(screen.getByRole("checkbox", { name: /我已閱讀並同意/ }));
     await userEvent.click(screen.getByRole("button", { name: "完成建立帳號" }));
 
     await waitFor(() =>
