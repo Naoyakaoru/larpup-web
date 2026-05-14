@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext";
 import { GoogleLogin } from "@react-oauth/google";
 import * as authApi from "../api/auth";
 import { recordConsent } from "../api/consents";
@@ -31,14 +32,11 @@ function SsoButton({
       style={{ fontFamily: '"Google Sans", Roboto, Arial, sans-serif' }}
       className={`w-full flex items-center justify-center h-[40px] rounded-[4px] text-[14px] font-medium tracking-[0.25px] disabled:opacity-50 transition-colors overflow-hidden ${className}`}
     >
-      {/* Inner wrapper — 對應 Google 的 nsm7Bb div，左右各 13px padding */}
-      <div className="flex items-center gap-2 flex-1 px-[13px]">
-        {/* Icon 置左，18×18px */}
-        <div className="w-[18px] h-[18px] flex items-center justify-center shrink-0">
+      <div className="flex items-center justify-center gap-2">
+        <div className="w-[20px] h-[20px] flex items-center justify-center shrink-0">
           {icon}
         </div>
-        {/* 文字佔滿剩餘空間，在剩餘寬度內置中 */}
-        <span className="flex-1 text-center leading-none">{label}</span>
+        <span className="leading-none">{label}</span>
       </div>
     </button>
   );
@@ -46,8 +44,8 @@ function SsoButton({
 
 function LineIcon() {
   return (
-    <svg className="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M22 10.06C22 5.5 17.52 1.82 12 1.82S2 5.5 2 10.06c0 4.1 3.64 7.53 8.56 8.18.33.07.78.22.9.5.1.26.07.66.03.92l-.14.86c-.04.26-.2 1.02.9.55 1.1-.46 5.9-3.48 8.05-5.96C21.27 13.31 22 11.76 22 10.06z"/>
+    <svg className="w-[20px] h-[20px] shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M22 10.06C22 5.5 17.52 1.82 12 1.82S2 5.5 2 10.06c0 4.1 3.64 7.53 8.56 8.18.33.07.78.22.9.5.1.26.07.66.03.92l-.14.86c-.04.26-.2 1.02.9.55 1.1-.46 5.9-3.48 8.05-5.96C21.27 13.31 22 11.76 22 10.06z" />
     </svg>
   );
 }
@@ -86,7 +84,7 @@ function ScaleIcon({ className }: { className?: string }) {
   );
 }
 
-const LINE_CHANNEL_ID   = import.meta.env.VITE_LINE_CHANNEL_ID as string;
+const LINE_CHANNEL_ID = import.meta.env.VITE_LINE_CHANNEL_ID as string;
 const LINE_REDIRECT_URI = import.meta.env.VITE_LINE_REDIRECT_URI as string;
 
 function buildLineLoginUrl(): string {
@@ -113,21 +111,22 @@ export default function RegisterPage() {
     nickname: "",
     gender: "",
   });
-  const [tempToken, setTempToken]       = useState("");
-  const [consentChecked, setConsent]    = useState(false);
-  const [consentSource, setConsentSrc]  = useState<string>("web_signup");
-  const [showTerms, setShowTerms]       = useState(false);
-  const [error, setError]               = useState("");
-  const [loading, setLoading]           = useState(false);
-  const { login }                       = useAuth();
-  const navigate                        = useNavigate();
+  const [tempToken, setTempToken] = useState("");
+  const [consentChecked, setConsent] = useState(false);
+  const [consentSource, setConsentSrc] = useState<string>("web_signup");
+  const [showTerms, setShowTerms] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const { isDark } = useTheme();
+  const navigate = useNavigate();
 
   // Helper: fire consent records after a token is available.
   // login() already stored the token in localStorage, so recordConsent() will pick it up automatically.
   async function recordRegistrationConsents(_token: string, source: string) {
     const version = "2026-05";
     await Promise.allSettled([
-      recordConsent({ consent_type: "privacy_policy",   consent_version: version, accepted: true, source }),
+      recordConsent({ consent_type: "privacy_policy", consent_version: version, accepted: true, source }),
       recordConsent({ consent_type: "terms_of_service", consent_version: version, accepted: true, source }),
     ]);
   }
@@ -135,10 +134,10 @@ export default function RegisterPage() {
   // Pre-fill SSO data from sessionStorage
   useEffect(() => {
     if (!isSso) return;
-    const token    = sessionStorage.getItem("sso_temp_token") ?? "";
-    const email    = sessionStorage.getItem("sso_email") ?? "";
+    const token = sessionStorage.getItem("sso_temp_token") ?? "";
+    const email = sessionStorage.getItem("sso_email") ?? "";
     const nickname = sessionStorage.getItem("sso_nickname") ?? "";
-    const source   = sessionStorage.getItem("sso_source") ?? "web_signup";
+    const source = sessionStorage.getItem("sso_source") ?? "web_signup";
     if (!token) { navigate("/login"); return; }
     setTempToken(token);
     setConsentSrc(source);
@@ -244,9 +243,11 @@ export default function RegisterPage() {
                 }}
                 onError={() => setError("Google 登入取消或失敗")}
                 text="signup_with"
-                theme="outline"
+                theme={isDark ? "filled_black" : "outline"}
                 size="large"
                 width="300"
+                shape="rectangular"
+                logo_alignment="center"
               />
             </div>
           </div>
