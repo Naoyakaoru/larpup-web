@@ -29,17 +29,25 @@ function SsoButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`w-full flex items-center justify-center gap-2.5 rounded-md py-2.5 text-sm font-medium disabled:opacity-50 transition-colors ${className}`}
+      style={{ fontFamily: '"Google Sans", Roboto, Arial, sans-serif' }}
+      className={`w-full flex items-center justify-center h-[40px] rounded-[4px] text-[14px] font-medium tracking-[0.25px] disabled:opacity-50 transition-colors overflow-hidden ${className}`}
     >
-      {icon}
-      <span>{label}</span>
+      {/* Inner wrapper — 對應 Google 的 nsm7Bb div，左右各 13px padding */}
+      <div className="flex items-center gap-2 flex-1 px-[13px]">
+        {/* Icon 置左，18×18px */}
+        <div className="w-[18px] h-[18px] flex items-center justify-center shrink-0">
+          {icon}
+        </div>
+        {/* 文字佔滿剩餘空間，在剩餘寬度內置中 */}
+        <span className="flex-1 text-center leading-none">{label}</span>
+      </div>
     </button>
   );
 }
 
 function LineIcon() {
   return (
-    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg className="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M22 10.06C22 5.5 17.52 1.82 12 1.82S2 5.5 2 10.06c0 4.1 3.64 7.53 8.56 8.18.33.07.78.22.9.5.1.26.07.66.03.92l-.14.86c-.04.26-.2 1.02.9.55 1.1-.46 5.9-3.48 8.05-5.96C21.27 13.31 22 11.76 22 10.06z"/>
     </svg>
   );
@@ -202,18 +210,8 @@ export default function RegisterPage() {
     }
   }
 
-  function triggerGoogleLogin() {
-    const inner = googleBtnRef.current?.querySelector<HTMLElement>('[role="button"],button,div[tabindex]');
-    if (inner) {
-      inner.click();
-      return;
-    }
-    ;(window as Window & { google?: { accounts?: { id?: { prompt?: () => void } } } })
-      .google?.accounts?.id?.prompt?.();
-  }
-
   return (
-    <div className="max-w-sm mx-auto mt-16">
+    <div className="w-[300px] mx-auto mt-16">
       <h1 className={`text-2xl font-bold text-gray-900 ${isSso ? "mb-2" : "mb-6"}`}>
         {isSso ? "完成帳號設定" : "註冊"}
       </h1>
@@ -223,7 +221,11 @@ export default function RegisterPage() {
         </p>
       )}
 
-      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+      {error && (
+        <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md mb-5 text-balance text-center leading-relaxed">
+          {error}
+        </div>
+      )}
 
       {/* ── SSO buttons — only in normal register mode, shown at TOP ─── */}
       {!isSso && (
@@ -233,28 +235,14 @@ export default function RegisterPage() {
             <SsoButton
               id="line-register-btn"
               icon={<LineIcon />}
-              label="使用 LINE 建立帳號"
+              label="使用 LINE 帳戶註冊"
               onClick={() => { window.location.href = buildLineLoginUrl(); }}
               disabled={loading}
               className="bg-[#06C755] text-white hover:bg-[#05B34C] active:bg-[#049B42] hover:shadow-md active:shadow-sm transition-all duration-200"
             />
 
-            {/* Google — custom button triggers hidden <GoogleLogin> */}
-            <SsoButton
-              id="google-register-btn"
-              icon={<GoogleIcon />}
-              label="使用 Google 帳戶建立"
-              onClick={triggerGoogleLogin}
-              disabled={loading}
-              className="bg-white border border-[#dadce0] text-[#3c4043] hover:bg-[#f8f9fa] active:bg-[#f1f3f4] hover:shadow-md active:shadow-sm transition-all duration-200"
-            />
-            {/* Hidden GoogleLogin — preserves id_token flow */}
-            <div
-              ref={googleBtnRef}
-              style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '400px' }}
-              aria-hidden="true"
-              data-testid="google-login-hidden"
-            >
+            {/* Google 官方按鈕 */}
+            <div className="flex justify-center w-full [&>div]:w-full">
               <GoogleLogin
                 onSuccess={async (credentialResponse) => {
                   const idToken = credentialResponse.credential;
@@ -268,9 +256,10 @@ export default function RegisterPage() {
                   } finally { setLoading(false); }
                 }}
                 onError={() => setError("Google 登入取消或失敗")}
-                width={400}
                 text="signup_with"
-                theme={isDark ? "filled_black" : "outline"}
+                theme="outline"
+                size="large"
+                width="300"
               />
             </div>
           </div>
