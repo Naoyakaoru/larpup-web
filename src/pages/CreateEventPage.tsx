@@ -79,7 +79,7 @@ export default function CreateEventPage() {
           .finally(() => setVersionsLoading(false));
       }
     }
-  }, [searchParams]);
+  }, [searchParams, scriptVersionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!debouncedSearch) {
