@@ -122,11 +122,9 @@ describe("LoginPage – email/password login", () => {
 });
 
 describe("LoginPage – Google SSO", () => {
-  it("renders both the visible Google button and the hidden inner OAuth button", () => {
+  it("renders the Google OAuth login button", () => {
     renderPage();
-    // Visible custom SsoButton
-    expect(screen.getByRole("button", { name: "使用 Google 登入" })).toBeInTheDocument();
-    // Hidden inner GoogleLogin shim
+    // Official GoogleLogin renders as our mock shim with this testid
     expect(screen.getByTestId("google-login-inner")).toBeInTheDocument();
   });
 
@@ -186,7 +184,7 @@ describe("LoginPage – Google SSO", () => {
 describe("LoginPage – LINE SSO", () => {
   it("renders LINE login button", () => {
     renderPage();
-    expect(screen.getByRole("button", { name: /使用 LINE 登入/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /使用 LINE 帳戶登入/ })).toBeInTheDocument();
   });
 
   it("sets line_oauth_state in sessionStorage and redirects to LINE when clicking LINE button", async () => {
@@ -197,7 +195,7 @@ describe("LoginPage – LINE SSO", () => {
     } as Location);
 
     renderPage();
-    const lineBtn = screen.getByRole("button", { name: /使用 LINE 登入/ });
+    const lineBtn = screen.getByRole("button", { name: /使用 LINE 帳戶登入/ });
     await userEvent.click(lineBtn);
 
     expect(sessionStorage.getItem("line_oauth_state")).toBeTruthy();
@@ -211,7 +209,7 @@ describe("LoginPage – LINE SSO", () => {
 // calls ssoGoogle with the credential.
 
 describe("LoginPage – Google button click mechanism", () => {
-  it("clicking the visible 使用 Google 登入 button triggers the inner OAuth button and calls ssoGoogle", async () => {
+  it("clicking the GoogleLogin button triggers ssoGoogle and navigates on success", async () => {
     mockSsoGoogle.mockResolvedValueOnce({
       token: "chain-jwt",
       user: { id: 3, handle: "h3", email: "c@c.com", nickname: "C", gender: "male" as const, avatar_url: null, is_admin: false, show_hosted_events: false },
@@ -219,12 +217,11 @@ describe("LoginPage – Google button click mechanism", () => {
 
     renderPage();
 
-    // Click the VISIBLE SsoButton (not the hidden inner button)
-    const visibleBtn = screen.getByRole("button", { name: "使用 Google 登入" });
-    await userEvent.click(visibleBtn);
+    // Click the GoogleLogin mock button directly (it IS the OAuth button now)
+    const googleBtn = screen.getByTestId("google-login-inner");
+    await userEvent.click(googleBtn);
 
-    // triggerGoogleLogin() should have found + clicked the inner button,
-    // which fires onSuccess({ credential: "inner-click-credential" }) → ssoGoogle
+    // The mock fires onSuccess({ credential: "inner-click-credential" }) → ssoGoogle
     await waitFor(() =>
       expect(mockSsoGoogle).toHaveBeenCalledWith("inner-click-credential"),
     );

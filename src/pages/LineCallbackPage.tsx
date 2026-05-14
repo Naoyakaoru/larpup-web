@@ -37,7 +37,9 @@ export default function LineCallbackPage() {
       .then((res: AuthResponse | SsoPendingResponse) => {
         if ('token' in res) {
           login(res.token, res.user)
-          navigate('/')
+          const returnTo = sessionStorage.getItem('line_return_to') || '/'
+          sessionStorage.removeItem('line_return_to')
+          navigate(returnTo)
         } else {
           sessionStorage.setItem('sso_temp_token', res.temp_token)
           sessionStorage.setItem('sso_email', res.email)
@@ -46,8 +48,9 @@ export default function LineCallbackPage() {
           navigate('/register?sso=1')
         }
       })
-      .catch(() => {
-        navigate('/login?error=line_failed')
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : 'line_failed'
+        navigate(`/login?error=${encodeURIComponent(msg)}`)
       })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
