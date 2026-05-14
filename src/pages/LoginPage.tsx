@@ -46,9 +46,8 @@ function SsoButton({
       style={{ fontFamily: '"Google Sans", Roboto, Arial, sans-serif' }}
       className={`w-full flex items-center justify-center h-[40px] rounded-[4px] text-[14px] font-medium tracking-[0.25px] disabled:opacity-50 transition-colors overflow-hidden ${className}`}
     >
-      {/* 讓 Icon 與文字靠攏並整體置中，對應 Google 的 logo_alignment="center" */}
       <div className="flex items-center justify-center gap-2">
-        <div className="w-[18px] h-[18px] flex items-center justify-center shrink-0">
+        <div className="w-[20px] h-[20px] flex items-center justify-center shrink-0">
           {icon}
         </div>
         <span className="leading-none">{label}</span>
@@ -59,7 +58,7 @@ function SsoButton({
 
 function LineIcon() {
   return (
-    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg className="w-[20px] h-[20px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M22 10.06C22 5.5 17.52 1.82 12 1.82S2 5.5 2 10.06c0 4.1 3.64 7.53 8.56 8.18.33.07.78.22.9.5.1.26.07.66.03.92l-.14.86c-.04.26-.2 1.02.9.55 1.1-.46 5.9-3.48 8.05-5.96C21.27 13.31 22 11.76 22 10.06z" />
     </svg>
   )
