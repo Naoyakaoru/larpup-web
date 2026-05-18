@@ -33,7 +33,7 @@ export interface PublicProfile {
   nickname: string;
   gender: "male" | "female";
   avatar_url: string | null;
-  hosted_events?: (Pick<Event, "id" | "script" | "scheduled_at" | "location" | "status"> & { address: { name: string; region: string } | null })[];
+  hosted_events?: Event[];
 }
 
 export interface Script {
@@ -80,6 +80,7 @@ export interface Event {
   status: "recruiting" | "full" | "completed" | "cancelled";
   confirmed_count: number;
   available_slots: number;
+  slot_parts?: string;
   members?: EventMember[];
   audit_logs?: AuditLogEntry[];
   deleted_at: string | null;

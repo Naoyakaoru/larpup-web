@@ -109,15 +109,21 @@ export default function EventsPage() {
                     {formatDate(event.scheduled_at)}
                   </div>
                   <EventLocation address={event.address} location={event.location} />
-                  <div className="flex items-center justify-between pt-0.5">
-                    <span className="text-gray-400">{event.host.nickname}</span>
-                    <span className="font-semibold text-gray-800 tabular-nums">
-                      {event.confirmed_count}
-                      <span className="font-normal text-gray-400">
-                        /{event.script.total_slots} 人
-                      </span>
-                    </span>
-                  </div>
+                    <div className="flex items-center justify-between pt-0.5">
+                      <span className="text-gray-400">{event.host.nickname}</span>
+                      {event.slot_parts ? (
+                        <span className="text-xs font-medium text-brand bg-brand-light/30 px-2 py-0.5 rounded-full border border-brand/20">
+                          缺 {event.slot_parts}
+                        </span>
+                      ) : (
+                        <span className="font-semibold text-gray-800 tabular-nums">
+                          {event.confirmed_count}
+                          <span className="font-normal text-gray-400">
+                            /{event.script.total_slots} 人
+                          </span>
+                        </span>
+                      )}
+                    </div>
                 </div>
               </div>
             </Link>
