@@ -43,16 +43,18 @@ export default function EventLocation({ address, location, className = "" }: Pro
           href={address.map_url!}
           target="_blank"
           rel="noopener noreferrer"
-          className={`inline-flex items-start text-left max-w-full text-brand hover:underline ${className}`}
+          className={`text-gray-700 hover:text-gray-900 underline underline-offset-2 decoration-gray-300 hover:decoration-gray-500 transition-colors ${className}`}
           onClick={(e) => e.stopPropagation()}
         >
-          <PinIcon className="mt-[1px]" /><span className="break-words leading-tight">{text}</span>
+          <PinIcon className="inline text-gray-400 -mt-0.5" />
+          <span>{text}</span>
         </a>
       );
     }
     return (
-      <span className={`inline-flex items-start text-left max-w-full ${className}`}>
-        <PinIcon className="mt-[1px]" /><span className="break-words leading-tight">{text}</span>
+      <span className={className}>
+        <PinIcon className="inline text-gray-400 -mt-0.5" />
+        <span>{text}</span>
       </span>
     );
   }
@@ -65,10 +67,11 @@ export default function EventLocation({ address, location, className = "" }: Pro
         href={location}
         target="_blank"
         rel="noopener noreferrer"
-        className={`inline-flex items-center text-brand hover:underline ${className}`}
+        className={`text-gray-700 hover:text-gray-900 underline underline-offset-2 decoration-gray-300 hover:decoration-gray-500 transition-colors ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <PinIcon />地圖
+        <PinIcon className="inline text-gray-400 -mt-0.5" />
+        <span>地圖</span>
       </a>
     );
   }
