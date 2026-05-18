@@ -75,11 +75,21 @@ function ScriptsTab() {
                   </h2>
                   <div className="flex items-center justify-between gap-1">
                     <div className="flex gap-1 flex-wrap">
-                      {script.genres.slice(0, 2).map((g) => (
-                        <span key={g} className="text-xs text-white/65">
-                          {GENRE_LABELS[g]}
-                        </span>
-                      ))}
+                      {script.genres
+                        .filter((g) => g >= 15)
+                        .map((g) => (
+                          <span key={g} className="text-xs text-amber-400 font-medium">
+                            {GENRE_LABELS[g]}
+                          </span>
+                        ))}
+                      {script.genres
+                        .filter((g) => g < 15)
+                        .slice(0, 2)
+                        .map((g) => (
+                          <span key={g} className="text-xs text-white/65">
+                            {GENRE_LABELS[g]}
+                          </span>
+                        ))}
                     </div>
                     <span className="text-xs text-white/55 shrink-0">
                       {script.total_slots}人

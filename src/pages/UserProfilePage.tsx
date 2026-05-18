@@ -93,17 +93,30 @@ export default function UserProfilePage() {
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1">
+                      {event.script.genres
+                        .filter((g) => g >= 15)
+                        .map((g) => (
+                          <span
+                            key={g}
+                            className="text-xs bg-amber-100 text-amber-700 font-medium px-1.5 py-0.5 rounded"
+                          >
+                            {GENRE_LABELS[g]}
+                          </span>
+                        ))}
                       <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
                         {DIFFICULTY_LABELS[event.script.difficulty]}
                       </span>
-                      {event.script.genres.slice(0, 3).map((g) => (
-                        <span
-                          key={g}
-                          className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded"
-                        >
-                          {GENRE_LABELS[g]}
-                        </span>
-                      ))}
+                      {event.script.genres
+                        .filter((g) => g < 15)
+                        .slice(0, 3)
+                        .map((g) => (
+                          <span
+                            key={g}
+                            className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded"
+                          >
+                            {GENRE_LABELS[g]}
+                          </span>
+                        ))}
                       {event.allow_cross_gender && (
                         <span className="text-xs bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded font-medium">
                           反串
