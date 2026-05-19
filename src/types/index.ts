@@ -99,11 +99,11 @@ export interface EventMember {
   id: number;
   user: { id: number; handle: string; nickname: string; gender: "male" | "female" };
   status:
-    | "pending"
-    | "confirmed"
-    | "rejected"
-    | "cancelled"
-    | "leave_requested";
+  | "pending"
+  | "confirmed"
+  | "rejected"
+  | "cancelled"
+  | "leave_requested";
   cross_gender: boolean;
   applied_at: string;
   confirmed_at: string | null;
