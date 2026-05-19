@@ -51,6 +51,7 @@ export interface Script {
   status: "pending" | "approved" | "rejected";
   cover_image_url: string | null;
   qiandao_cover_id?: string | null;
+  deleted_at?: string | null;
 }
 
 export interface Event {

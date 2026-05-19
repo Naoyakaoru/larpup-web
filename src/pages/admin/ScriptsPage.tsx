@@ -20,6 +20,8 @@ const STATUS_CLASS: Record<Script["status"], string> = {
   rejected: "bg-red-100 text-red-800",
 };
 
+const DELETED_CLASS = "bg-gray-200 text-gray-500 line-through";
+
 export default function AdminScriptsPage() {
   const [scripts, setScripts] = useState<Script[]>([]);
   const [loading, setLoading] = useState(true);
@@ -159,11 +161,17 @@ export default function AdminScriptsPage() {
                     {script.cover_image_url ? "✓" : ""}
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${STATUS_CLASS[script.status]}`}
-                    >
-                      {STATUS_LABEL[script.status]}
-                    </span>
+                    {script.deleted_at ? (
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${DELETED_CLASS}`}>
+                        已刪除
+                      </span>
+                    ) : (
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${STATUS_CLASS[script.status]}`}
+                      >
+                        {STATUS_LABEL[script.status]}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">

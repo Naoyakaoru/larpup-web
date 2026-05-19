@@ -24,6 +24,7 @@ export interface StoreScriptVersion {
   gm_count: number | null
   has_food: boolean | null
   has_costume_change: boolean | null
+  address_ids: number[]
 }
 
 export function getStoreScriptVersions(storeId: number) {
@@ -42,8 +43,9 @@ export function updateStoreScriptVersion(storeId: number, versionId: number, dat
 }
 
 type ExtrasFields = { npc_count?: number | null; gm_count?: number | null; has_food?: boolean | null; has_costume_change?: boolean | null }
-type CreateExistingScript = { script_id: number; price: number; duration_override?: number; version_name?: string } & ExtrasFields
-type CreateNewScript = { title: string; difficulty: string; male_slots: number; female_slots: number; any_slots: number; genres: number[]; duration_override: number; price: number; version_name?: string } & ExtrasFields
+type AddressField = { address_ids?: number[] }
+type CreateExistingScript = { script_id: number; price: number; duration_override?: number; version_name?: string } & ExtrasFields & AddressField
+type CreateNewScript = { title: string; difficulty: string; male_slots: number; female_slots: number; any_slots: number; genres: number[]; duration_override: number; price: number; version_name?: string } & ExtrasFields & AddressField
 
 export function createStoreScriptVersion(storeId: number, data: CreateExistingScript | CreateNewScript) {
   return request<StoreScriptVersion>(`/stores/${storeId}/script_versions`, {
