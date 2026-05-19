@@ -50,6 +50,7 @@ export interface Script {
   publisher: string | null;
   status: "pending" | "approved" | "rejected";
   cover_image_url: string | null;
+  qiandao_cover_id?: string | null;
 }
 
 export interface Event {
