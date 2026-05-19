@@ -64,6 +64,8 @@ export function scriptAutofill(title: string) {
     male_slots: number
     female_slots: number
     any_slots: number
+    duration: number | null
+    description: string
     publisher: string
     cover_image_id: string
     cover_cdn_url: string

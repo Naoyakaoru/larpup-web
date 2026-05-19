@@ -42,6 +42,8 @@ export default function AddVersionForm({
   const [newAny, setNewAny] = useState(0);
   const [newGenres, setNewGenres] = useState<number[]>([]);
   const [newDuration, setNewDuration] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newPublisher, setNewPublisher] = useState("");
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -213,6 +215,9 @@ export default function AddVersionForm({
                   if (data.male_slots != null) setNewMale(data.male_slots);
                   if (data.female_slots != null) setNewFemale(data.female_slots);
                   if (data.any_slots != null) setNewAny(data.any_slots);
+                  if (data.duration) setNewDuration(String(data.duration));
+                  if (data.description) setNewDescription(data.description);
+                  if (data.publisher) setNewPublisher(data.publisher);
                   setAutofillMsg({ ok: true, text: "已自動填入，如有誤請直接修改" });
                 } catch (e: unknown) {
                   const msg = e instanceof Error && e.message.includes('404') ? "找不到此劇本資料，請手動填寫" : "自動填入失敗，請手動填寫";
@@ -263,10 +268,22 @@ export default function AddVersionForm({
             <input type="number" min={1} value={newDuration} onChange={(e) => setNewDuration(e.target.value)} required
               className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
           </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-0.5 block">出版商（選填）</label>
+            <input type="text" value={newPublisher} onChange={(e) => setNewPublisher(e.target.value)}
+              placeholder="如：LARP工作室"
+              className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-0.5 block">劇本簡介（選填）</label>
+            <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} rows={3}
+              className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+          </div>
           <button type="button" onClick={() => { setShowNew(false); setQuery(""); }}
             className="text-xs text-gray-400 hover:text-gray-600">取消，改搜尋現有劇本</button>
         </div>
       )}
+
 
       <div className="grid grid-cols-2 gap-3">
         <div>
