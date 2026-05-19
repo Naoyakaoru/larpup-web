@@ -5,7 +5,7 @@ import ScriptsPage from "../pages/ScriptsPage";
 import type { Script } from "../types";
 
 vi.mock("../api/scripts", () => ({
-  getScripts: () => Promise.resolve(mockScripts),
+  getScripts: () => Promise.resolve({ scripts: mockScripts, has_more: false }),
 }));
 
 let mockScripts: Script[];
