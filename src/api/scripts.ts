@@ -34,8 +34,12 @@ export function getScriptVersions(scriptId: number) {
   return request<ScriptVersion[]>(`/scripts/${scriptId}/versions`)
 }
 
-export function getAdminScripts() {
-  return request<Script[]>('/admin/scripts')
+export function getAdminScripts(params: { page?: number; q?: string } = {}) {
+  const searchParams = new URLSearchParams()
+  if (params.page) searchParams.set('page', String(params.page))
+  if (params.q) searchParams.set('q', params.q)
+  const qs = searchParams.toString()
+  return request<{ scripts: Script[]; total: number; page: number; total_pages: number; pending_count: number }>(`/admin/scripts${qs ? `?${qs}` : ''}`)
 }
 
 export function approveScript(id: number) {
