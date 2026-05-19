@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getStoreScriptVersions, updateStoreScriptVersion, deleteStoreScriptVersion } from "../api/stores";
 import type { StoreScriptVersion } from "../api/stores";
+import { getStoreAddresses } from "../api/addresses";
+import type { Address } from "../types";
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from "../utils/labels";
 import AddVersionForm from "../components/AddVersionForm";
 
@@ -14,6 +16,7 @@ interface EditDraft {
   gm_count: string;
   has_food: boolean;
   has_costume_change: boolean;
+  address_ids: number[];
 }
 
 function versionToEditDraft(v: StoreScriptVersion): EditDraft {
@@ -25,6 +28,7 @@ function versionToEditDraft(v: StoreScriptVersion): EditDraft {
     gm_count: v.gm_count != null ? String(v.gm_count) : "",
     has_food: v.has_food ?? false,
     has_costume_change: v.has_costume_change ?? false,
+    address_ids: v.address_ids ?? [],
   };
 }
 
@@ -38,11 +42,14 @@ export default function StoreScriptVersionsPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
   const [saving, setSaving] = useState(false);
+  const [addresses, setAddresses] = useState<Address[]>([]);
 
   useEffect(() => {
     getStoreScriptVersions(storeId)
       .then(setVersions)
       .finally(() => setLoading(false));
+    
+    getStoreAddresses(storeId).then(setAddresses).catch(() => {});
   }, [storeId]);
 
   async function toggleAvailable(v: StoreScriptVersion) {
@@ -62,6 +69,18 @@ export default function StoreScriptVersionsPage() {
     setEditDraft(null);
   }
 
+  function toggleEditAddress(id: number) {
+    if (!editDraft) return;
+    setEditDraft((prev) => {
+      if (!prev) return prev;
+      const ids = prev.address_ids;
+      return {
+        ...prev,
+        address_ids: ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
+      };
+    });
+  }
+
   async function saveEdit(versionId: number) {
     if (!editDraft) return;
     setSaving(true);
@@ -76,6 +95,7 @@ export default function StoreScriptVersionsPage() {
         gm_count: editDraft.gm_count ? parseInt(editDraft.gm_count) : null,
         has_food: editDraft.has_food || null,
         has_costume_change: editDraft.has_costume_change || null,
+        address_ids: editDraft.address_ids,
       });
       setVersions((vs) => vs.map((x) => (x.id === updated.id ? updated : x)));
       cancelEdit();
@@ -234,6 +254,27 @@ export default function StoreScriptVersionsPage() {
                       換裝
                     </label>
                   </div>
+                  {addresses.length > 0 && (
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">可遊玩地點（選填）</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {addresses.map((a) => (
+                          <button
+                            key={a.id}
+                            type="button"
+                            onClick={() => toggleEditAddress(a.id)}
+                            className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                              editDraft.address_ids.includes(a.id)
+                                ? "bg-brand text-white border-brand"
+                                : "border-gray-300 text-gray-600 hover:border-gray-400"
+                            }`}
+                          >
+                            {a.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <button
                       type="button"

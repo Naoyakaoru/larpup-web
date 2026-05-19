@@ -77,6 +77,10 @@ export function adminDeleteScript(id: number) {
   return request<void>(`/admin/scripts/${id}`, { method: 'DELETE' })
 }
 
+export function adminDeleteScriptCover(id: number) {
+  return request<Script>(`/admin/scripts/${id}/cover_delete`, { method: 'DELETE' })
+}
+
 export interface BulkImportRow {
   qiandao_id?: string | null
   rating?: string | null

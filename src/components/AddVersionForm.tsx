@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { createStoreScriptVersion } from "../api/stores";
 import type { StoreScriptVersion } from "../api/stores";
 import { getScripts, importScriptCover, scriptAutofill } from "../api/scripts";
-import type { Script } from "../types";
+import { getStoreAddresses } from "../api/addresses";
+import type { Script, Address } from "../types";
 import { DIFFICULTY_LABELS, GENRES } from "../utils/labels";
 
 export default function AddVersionForm({
@@ -47,6 +48,19 @@ export default function AddVersionForm({
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressIds, setSelectedAddressIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    getStoreAddresses(storeId).then(setAddresses).catch(() => {});
+  }, [storeId]);
+
+  function toggleAddress(id: number) {
+    setSelectedAddressIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -97,6 +111,7 @@ export default function AddVersionForm({
           male_slots: newMale, female_slots: newFemale, any_slots: newAny,
           genres: newGenres, duration_override: Number(newDuration),
           price: Number(price), version_name: versionName || undefined,
+          address_ids: selectedAddressIds.length ? selectedAddressIds : undefined,
           ...extras,
         });
       } else {
@@ -105,6 +120,7 @@ export default function AddVersionForm({
           script_id: selected.id, price: Number(price),
           duration_override: durationOverride ? Number(durationOverride) : undefined,
           version_name: versionName || undefined,
+          address_ids: selectedAddressIds.length ? selectedAddressIds : undefined,
           ...extras,
         });
       }
@@ -114,6 +130,7 @@ export default function AddVersionForm({
       setNpcCount(""); setGmCount(""); setHasFood(false); setHasCostumeChange(false);
       setNewTitle(""); setNewDifficulty("easy"); setNewMale(0); setNewFemale(0);
       setNewAny(0); setNewGenres([]); setNewDuration("");
+      setSelectedAddressIds([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "新增失敗");
     } finally { setSubmitting(false); }
@@ -328,6 +345,28 @@ export default function AddVersionForm({
           換裝
         </label>
       </div>
+
+      {addresses.length > 0 && (
+        <div>
+          <label className="text-xs text-gray-500 mb-1 block">可遊玩地點（選填）</label>
+          <div className="flex flex-wrap gap-1.5">
+            {addresses.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => toggleAddress(a.id)}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  selectedAddressIds.includes(a.id)
+                    ? "bg-brand text-white border-brand"
+                    : "border-gray-300 text-gray-600 hover:border-gray-400"
+                }`}
+              >
+                {a.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 

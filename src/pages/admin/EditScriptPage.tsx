@@ -1,6 +1,6 @@
 import { useState, useEffect, type ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getScript, updateScript, adminDeleteScript } from "../../api/scripts";
+import { getScript, updateScript, adminDeleteScript, adminDeleteScriptCover } from "../../api/scripts";
 import type { Script } from "../../types";
 import { GENRES, DIFFICULTY_OPTIONS } from "../../utils/labels";
 
@@ -21,6 +21,20 @@ export default function EditScriptPage() {
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deletingCover, setDeletingCover] = useState(false);
+
+  async function handleDeleteCover() {
+    if (!window.confirm("確定要刪除封面圖片？")) return;
+    setDeletingCover(true);
+    try {
+      const updated = await adminDeleteScriptCover(Number(id));
+      setScript(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "刪除失敗");
+    } finally {
+      setDeletingCover(false);
+    }
+  }
 
   useEffect(() => {
     if (!id) return;
@@ -210,10 +224,20 @@ export default function EditScriptPage() {
             封面圖片
           </label>
           {script.cover_image_url && (
-            <img
-              src={script.cover_image_url}
-              className="w-24 h-24 object-cover rounded mb-2 border border-gray-200"
-            />
+            <div className="flex items-start gap-3 mb-2">
+              <img
+                src={script.cover_image_url}
+                className="w-24 h-24 object-cover rounded border border-gray-200"
+              />
+              <button
+                type="button"
+                onClick={handleDeleteCover}
+                disabled={deletingCover}
+                className="text-xs text-red-500 hover:text-red-700 border border-red-300 rounded px-2 py-1 hover:bg-red-50 disabled:opacity-50"
+              >
+                {deletingCover ? "刪除中..." : "🗑 刪除封面"}
+              </button>
+            </div>
           )}
           <input
             type="file"
@@ -242,13 +266,15 @@ export default function EditScriptPage() {
           </button>
         </div>
         <div className="pt-2 border-t border-gray-100">
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="text-sm text-red-500 hover:text-red-700"
-          >
-            刪除此劇本
-          </button>
+          {!script.deleted_at && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="text-sm text-red-500 hover:text-red-700"
+            >
+              刪除此劇本
+            </button>
+          )}
         </div>
       </form>
     </div>
