@@ -1,10 +1,10 @@
 import { request } from './client'
 import type { Script } from '../types'
 
-export function getScripts(filters: { difficulty?: string; genre?: number; q?: string; page?: number } = {}) {
+export function getScripts(filters: { difficulty?: string; genres?: number[]; q?: string; page?: number } = {}) {
   const params = new URLSearchParams()
   if (filters.difficulty) params.set('difficulty', filters.difficulty)
-  if (filters.genre !== undefined) params.set('genre', String(filters.genre))
+  if (filters.genres?.length) params.set('genres', filters.genres.join(','))
   if (filters.q) params.set('q', filters.q)
   if (filters.page) params.set('page', String(filters.page))
   const qs = params.toString()
@@ -49,6 +49,28 @@ export function approveScript(id: number) {
 
 export function rejectScript(id: number) {
   return request<Script>(`/admin/scripts/${id}/reject`, { method: 'PATCH' })
+}
+
+export function importScriptCover(id: number) {
+  return request<Script>(`/admin/scripts/${id}/cover_import`, { method: 'POST' })
+}
+
+export function scriptAutofill(title: string) {
+  return request<{
+    qiandao_id: string
+    title: string
+    difficulty: 'easy' | 'medium' | 'hard'
+    genres: number[]
+    male_slots: number
+    female_slots: number
+    any_slots: number
+    duration: number | null
+    description: string
+    publisher: string
+    cover_image_id: string
+    cover_cdn_url: string
+    key_property: string
+  }>(`/admin/scripts/autofill?title=${encodeURIComponent(title)}`)
 }
 
 export function adminDeleteScript(id: number) {

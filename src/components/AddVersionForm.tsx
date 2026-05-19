@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createStoreScriptVersion } from "../api/stores";
 import type { StoreScriptVersion } from "../api/stores";
-import { getScripts } from "../api/scripts";
+import { getScripts, importScriptCover, scriptAutofill } from "../api/scripts";
 import type { Script } from "../types";
 import { DIFFICULTY_LABELS, GENRES } from "../utils/labels";
 
@@ -20,6 +20,10 @@ export default function AddVersionForm({
   const [showNew, setShowNew] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [fetchingCover, setFetchingCover] = useState(false);
+  const [coverMsg, setCoverMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [autofilling, setAutofilling] = useState(false);
+  const [autofillMsg, setAutofillMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -38,6 +42,8 @@ export default function AddVersionForm({
   const [newAny, setNewAny] = useState(0);
   const [newGenres, setNewGenres] = useState<number[]>([]);
   const [newDuration, setNewDuration] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newPublisher, setNewPublisher] = useState("");
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -154,10 +160,83 @@ export default function AddVersionForm({
         )}
       </div>
 
+      {selected && !showNew && (
+        <div className="flex items-center gap-2 text-xs">
+          {selected.cover_image_url ? (
+            <img src={selected.cover_image_url} alt="cover" className="w-8 h-10 object-cover rounded" />
+          ) : selected.qiandao_cover_id ? (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={fetchingCover}
+                onClick={async () => {
+                  setCoverMsg(null);
+                  setFetchingCover(true);
+                  try {
+                    const updated = await importScriptCover(selected.id);
+                    setSelected(updated);
+                    setResults((prev) => prev.map((r) => r.id === updated.id ? updated : r));
+                    setCoverMsg({ ok: true, text: "封面已取得" });
+                  } catch {
+                    setCoverMsg({ ok: false, text: "無法取得封面，請稍後再試" });
+                  } finally {
+                    setFetchingCover(false);
+                  }
+                }}
+                className="flex items-center gap-1 px-2 py-1 rounded border border-brand/40 text-brand hover:bg-brand/5 disabled:opacity-50"
+              >
+                {fetchingCover ? "處理中..." : "✨ 自動帶入封面"}
+              </button>
+              {coverMsg && (
+                <span className={coverMsg.ok ? "text-green-600" : "text-amber-600"}>
+                  {coverMsg.ok ? "✓" : "⚠"} {coverMsg.text}
+                </span>
+              )}
+            </div>
+          ) : null}
+        </div>
+      )}
+
       {showNew && (
         <div className="space-y-3 border border-brand/20 rounded-md p-3 bg-brand/5">
-          <p className="text-xs text-brand font-medium">新劇本（將送交 admin 審核）</p>
-          <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-brand font-medium">新劇本（將送交 admin 審核）</p>
+            <button
+              type="button"
+              disabled={autofilling || !newTitle.trim()}
+              onClick={async () => {
+                if (!newTitle.trim()) return;
+                setAutofilling(true);
+                setAutofillMsg(null);
+                try {
+                  const data = await scriptAutofill(newTitle.trim());
+                  if (data.difficulty) setNewDifficulty(data.difficulty);
+                  if (data.genres?.length) setNewGenres(data.genres);
+                  if (data.male_slots != null) setNewMale(data.male_slots);
+                  if (data.female_slots != null) setNewFemale(data.female_slots);
+                  if (data.any_slots != null) setNewAny(data.any_slots);
+                  if (data.duration) setNewDuration(String(data.duration));
+                  if (data.description) setNewDescription(data.description);
+                  if (data.publisher) setNewPublisher(data.publisher);
+                  setAutofillMsg({ ok: true, text: "已自動填入，如有誤請直接修改" });
+                } catch (e: unknown) {
+                  const msg = e instanceof Error && e.message.includes('404') ? "找不到此劇本資料，請手動填寫" : "自動填入失敗，請手動填寫";
+                  setAutofillMsg({ ok: false, text: msg });
+                } finally {
+                  setAutofilling(false);
+                }
+              }}
+              className="text-xs px-2 py-1 rounded border border-brand/40 text-brand hover:bg-brand/5 disabled:opacity-50"
+            >
+              {autofilling ? "搜尋中..." : "✨ 自動填入"}
+            </button>
+          </div>
+          {autofillMsg && (
+            <p className={`text-xs ${autofillMsg.ok ? "text-green-600" : "text-amber-600"}`}>
+              {autofillMsg.ok ? "✓" : "⚠"} {autofillMsg.text}
+            </p>
+          )}          
+          <input type="text" value={newTitle} onChange={(e) => { setNewTitle(e.target.value); setAutofillMsg(null); }}
             placeholder="劇本名稱" required
             className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
           <select value={newDifficulty} onChange={(e) => setNewDifficulty(e.target.value)}
@@ -189,10 +268,22 @@ export default function AddVersionForm({
             <input type="number" min={1} value={newDuration} onChange={(e) => setNewDuration(e.target.value)} required
               className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
           </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-0.5 block">出版商（選填）</label>
+            <input type="text" value={newPublisher} onChange={(e) => setNewPublisher(e.target.value)}
+              placeholder="如：LARP工作室"
+              className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-0.5 block">劇本簡介（選填）</label>
+            <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} rows={3}
+              className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+          </div>
           <button type="button" onClick={() => { setShowNew(false); setQuery(""); }}
             className="text-xs text-gray-400 hover:text-gray-600">取消，改搜尋現有劇本</button>
         </div>
       )}
+
 
       <div className="grid grid-cols-2 gap-3">
         <div>

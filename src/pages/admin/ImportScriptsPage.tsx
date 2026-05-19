@@ -213,6 +213,7 @@ export default function ImportScriptsPage() {
       const payload = included.map((r) => ({
         qiandao_id: r.qiandao_id,
         rating: r.rating,
+        wish_count: r._wish_count ? parseInt(r._wish_count, 10) : 0,
         cover_image_id: r.cover_image_id,
         title: r.title,
         difficulty: r.difficulty,
