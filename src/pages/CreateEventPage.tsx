@@ -86,7 +86,7 @@ export default function CreateEventPage() {
       setScripts([]);
       return;
     }
-    getScripts({ q: debouncedSearch }).then(setScripts);
+    getScripts({ q: debouncedSearch }).then((res) => setScripts(res.scripts));
   }, [debouncedSearch]);
 
   // Close dropdown on outside click
