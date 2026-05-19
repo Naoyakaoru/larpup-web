@@ -266,13 +266,15 @@ export default function EditScriptPage() {
           </button>
         </div>
         <div className="pt-2 border-t border-gray-100">
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="text-sm text-red-500 hover:text-red-700"
-          >
-            刪除此劇本
-          </button>
+          {!script.deleted_at && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="text-sm text-red-500 hover:text-red-700"
+            >
+              刪除此劇本
+            </button>
+          )}
         </div>
       </form>
     </div>
