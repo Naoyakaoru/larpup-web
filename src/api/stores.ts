@@ -35,7 +35,7 @@ export function deleteStoreScriptVersion(storeId: number, versionId: number) {
   return request<void>(`/stores/${storeId}/script_versions/${versionId}`, { method: 'DELETE' })
 }
 
-export function updateStoreScriptVersion(storeId: number, versionId: number, data: Partial<Pick<StoreScriptVersion, 'available' | 'price' | 'version_name' | 'duration_override' | 'npc_count' | 'gm_count' | 'has_food' | 'has_costume_change'>>) {
+export function updateStoreScriptVersion(storeId: number, versionId: number, data: Partial<Pick<StoreScriptVersion, 'available' | 'price' | 'version_name' | 'duration_override' | 'npc_count' | 'gm_count' | 'has_food' | 'has_costume_change' | 'address_ids'>>) {
   return request<StoreScriptVersion>(`/stores/${storeId}/script_versions/${versionId}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
