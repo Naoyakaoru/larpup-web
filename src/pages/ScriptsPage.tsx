@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { getScripts } from "../api/scripts";
 import { getStores } from "../api/stores";
@@ -14,14 +14,50 @@ type Tab = "scripts" | "stores";
 function ScriptsTab() {
   const [scripts, setScripts] = useState<Script[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [difficulty, setDifficulty] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setLoading(true);
-    getScripts(difficulty ? { difficulty } : {})
-      .then(setScripts)
-      .finally(() => setLoading(false));
+    setPage(1);
+    setScripts([]);
+    setHasMore(false);
   }, [difficulty]);
+
+  useEffect(() => {
+    if (page === 1) setLoading(true);
+    else setLoadingMore(true);
+
+    getScripts({ difficulty: difficulty || undefined, page })
+      .then((res) => {
+        setScripts((prev) => (page === 1 ? res.scripts : [...prev, ...res.scripts]));
+        setHasMore(res.has_more);
+      })
+      .finally(() => {
+        setLoading(false);
+        setLoadingMore(false);
+      });
+  }, [difficulty, page]);
+
+  useEffect(() => {
+    if (loading || loadingMore || !hasMore) return;
+    
+    observerRef.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        setPage((p) => p + 1);
+      }
+    });
+    
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+    
+    return () => observerRef.current?.disconnect();
+  }, [loading, loadingMore, hasMore]);
 
   return (
     <>
@@ -100,6 +136,12 @@ function ScriptsTab() {
               </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {hasMore && (
+        <div ref={loadMoreRef} className="py-8 text-center text-sm text-gray-400">
+          {loadingMore ? "載入更多劇本中..." : "向下捲動載入更多"}
         </div>
       )}
     </>

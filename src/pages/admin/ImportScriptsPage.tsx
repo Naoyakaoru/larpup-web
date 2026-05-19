@@ -377,7 +377,14 @@ export default function ImportScriptsPage() {
                         className="rounded"
                       />
                     </td>
-                    <td className="px-3 py-2 text-sm">{row.title}</td>
+                    <td className="px-3 py-2 text-sm">
+                      <input
+                        type="text"
+                        value={row.title}
+                        onChange={(e) => update(row._key, { title: e.target.value })}
+                        className="w-full border border-transparent focus:border-brand focus:ring-1 focus:ring-brand rounded px-1 py-0.5 text-sm"
+                      />
+                    </td>
                     <td className="px-3 py-2 text-center text-xs text-gray-400">
                       {row._rating || "—"}
                     </td>

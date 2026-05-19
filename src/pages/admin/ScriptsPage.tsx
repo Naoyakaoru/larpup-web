@@ -24,12 +24,31 @@ export default function AdminScriptsPage() {
   const [scripts, setScripts] = useState<Script[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<number | null>(null);
+  
+  const [page, setPage] = useState(1);
+  const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
+  const [totalPages, setTotalPages] = useState(1);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
-    getAdminScripts()
-      .then(setScripts)
+    const timer = setTimeout(() => {
+      setDebouncedQ(q);
+      setPage(1); // Reset to page 1 when search changes
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [q]);
+
+  useEffect(() => {
+    setLoading(true);
+    getAdminScripts({ page, q: debouncedQ })
+      .then((res) => {
+        setScripts(res.scripts);
+        setTotalPages(res.total_pages);
+        setPendingCount(res.pending_count);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [page, debouncedQ]);
 
   async function handleApprove(id: number) {
     setActionId(id);
@@ -51,7 +70,7 @@ export default function AdminScriptsPage() {
     }
   }
 
-  const pendingCount = scripts.filter((s) => s.status === "pending").length;
+
 
   return (
     <div>
@@ -63,6 +82,15 @@ export default function AdminScriptsPage() {
               {pendingCount} 筆待審核
             </span>
           )}
+        </div>
+        <div className="flex-1 max-w-sm mx-4">
+          <input
+            type="text"
+            placeholder="搜尋劇本名稱..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:ring-brand focus:border-brand"
+          />
         </div>
         <div className="flex items-center gap-2">
           <Link
@@ -169,6 +197,30 @@ export default function AdminScriptsPage() {
               ))}
             </tbody>
           </table>
+          
+          {totalPages > 1 && (
+            <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+              <span className="text-sm text-gray-500">
+                第 {page} 頁，共 {totalPages} 頁
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1 text-sm border border-gray-300 rounded text-gray-600 hover:bg-white disabled:opacity-50"
+                >
+                  上一頁
+                </button>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1 text-sm border border-gray-300 rounded text-gray-600 hover:bg-white disabled:opacity-50"
+                >
+                  下一頁
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

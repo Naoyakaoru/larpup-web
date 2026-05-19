@@ -61,7 +61,7 @@ export default function AddVersionForm({
     setDropdownOpen(true);
     debounceRef.current = setTimeout(async () => {
       try {
-        setResults(await getScripts({ q }));
+        setResults((await getScripts({ q })).scripts);
       } finally { setSearching(false); }
     }, 500);
   }
