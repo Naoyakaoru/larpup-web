@@ -74,16 +74,16 @@ export default function AdminScriptsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-bold text-gray-900">劇本管理</h1>
           {pendingCount > 0 && (
-            <span className="text-sm bg-yellow-100 text-yellow-800 px-2.5 py-0.5 rounded-full font-medium">
+            <span className="text-sm bg-yellow-100 text-yellow-800 px-2.5 py-0.5 rounded-full font-medium whitespace-nowrap">
               {pendingCount} 筆待審核
             </span>
           )}
         </div>
-        <div className="flex-1 max-w-sm mx-4">
+        <div className="flex-1 w-full md:max-w-sm">
           <input
             type="text"
             placeholder="搜尋劇本名稱..."
@@ -92,16 +92,16 @@ export default function AdminScriptsPage() {
             className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:ring-brand focus:border-brand"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             to="/admin/scripts/import"
-            className="text-sm border border-gray-300 text-gray-600 px-4 py-2 rounded-md hover:bg-gray-50"
+            className="text-sm border border-gray-300 text-gray-600 px-4 py-2 rounded-md hover:bg-gray-50 whitespace-nowrap"
           >
             批量匯入
           </Link>
           <Link
             to="/admin/scripts/new"
-            className="text-sm bg-brand text-white px-4 py-2 rounded-md hover:bg-brand-hover"
+            className="text-sm bg-brand text-white px-4 py-2 rounded-md hover:bg-brand-hover whitespace-nowrap"
           >
             新增劇本
           </Link>
@@ -114,7 +114,8 @@ export default function AdminScriptsPage() {
         <p className="text-sm text-gray-500">尚無劇本</p>
       ) : (
         <div className="bg-surface border border-gray-200 rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">
@@ -197,6 +198,7 @@ export default function AdminScriptsPage() {
               ))}
             </tbody>
           </table>
+          </div>
           
           {totalPages > 1 && (
             <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between bg-gray-50">
