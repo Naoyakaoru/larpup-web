@@ -1,3 +1,4 @@
+import React from "react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -14,6 +15,11 @@ vi.mock("../api/scripts", () => ({
 
 vi.mock("../api/stores", () => ({
   getStores: () => Promise.resolve([]),
+}));
+
+vi.mock("../contexts/AuthContext", () => ({
+  useAuth: () => ({ user: null, token: null, login: vi.fn(), logout: vi.fn(), isLoading: false }),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 function makeScript(overrides: Partial<Script> = {}): Script {
