@@ -2,12 +2,16 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getScript, getScriptVersions } from "../api/scripts";
 import type { ScriptVersion } from "../api/scripts";
-import type { Script } from "../types";
+import type { Script, Event } from "../types";
+import { getEvents } from "../api/events";
+import EventLocation from "../components/EventLocation";
+import { formatDate, getTimeSlot, type TimeSlot } from "../utils/formatDate";
 
 import {
   DIFFICULTY_COLORS,
   DIFFICULTY_LABELS,
   GENRE_LABELS,
+  REGION_OPTIONS,
 } from "../utils/labels";
 
 export default function ScriptDetailPage() {
@@ -15,14 +19,31 @@ export default function ScriptDetailPage() {
   const navigate = useNavigate();
   const [script, setScript] = useState<Script | null>(null);
   const [versions, setVersions] = useState<ScriptVersion[]>([]);
+  const [activeEvents, setActiveEvents] = useState<Event[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<string>("");
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | "">("");
   const [loading, setLoading] = useState(true);
+
+  const filteredActiveEvents = activeEvents
+    .filter((e) => !selectedRegion || e.address?.region === selectedRegion)
+    .filter((e) => {
+      if (!selectedTimeSlot) return true;
+      const slot = getTimeSlot(e.scheduled_at);
+      if (selectedTimeSlot === "weekday_night") return slot === "weekday_night" || slot === "friday_night";
+      return slot === selectedTimeSlot;
+    });
 
   useEffect(() => {
     const scriptId = Number(id);
-    Promise.all([getScript(scriptId), getScriptVersions(scriptId)])
-      .then(([s, v]) => {
+    Promise.all([
+      getScript(scriptId),
+      getScriptVersions(scriptId),
+      getEvents({ script_id: scriptId, status: "recruiting" }),
+    ])
+      .then(([s, v, evs]) => {
         setScript(s);
         setVersions(v);
+        setActiveEvents(evs);
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -162,6 +183,112 @@ export default function ScriptDetailPage() {
       >
         {versions.length > 0 ? "不指定店家，直接揪團" : "用這個劇本揪團"}
       </Link>
+
+      {activeEvents.length > 0 && (
+        <div className="mt-6 bg-surface border border-gray-200 rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 space-y-2">
+            <p className="text-sm font-medium text-gray-700">可加入的活動（直接跟團）</p>
+            <div className="flex gap-1.5 flex-wrap">
+              <button
+                onClick={() => setSelectedRegion("")}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  selectedRegion === ""
+                    ? "bg-brand text-white border-brand"
+                    : "text-gray-500 border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                全部
+              </button>
+              {REGION_OPTIONS.map((r) => (
+                <button
+                  key={r.value}
+                  onClick={() => setSelectedRegion(selectedRegion === r.value ? "" : r.value)}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                    selectedRegion === r.value
+                      ? "bg-brand text-white border-brand"
+                      : "text-gray-500 border-gray-300 hover:bg-gray-100"
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              {(["", "weekday_day", "weekday_night", "friday_night", "weekend"] as const).map((t) => {
+                const label = t === "" ? "全時段" : t === "weekday_day" ? "平白" : t === "weekday_night" ? "平晚" : t === "friday_night" ? "五晚" : "假日";
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setSelectedTimeSlot(selectedTimeSlot === t ? "" : t)}
+                    className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                      selectedTimeSlot === t
+                        ? "bg-brand text-white border-brand"
+                        : "text-gray-500 border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="min-h-[10.8rem] flex flex-col">
+          {filteredActiveEvents.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center text-sm text-gray-400">
+              沒有符合條件的活動
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+            {filteredActiveEvents.map((event) => (
+              <li
+                key={event.id}
+                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-gray-50/50 transition-colors"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="text-xs font-semibold text-gray-900 bg-gray-100 px-2 py-0.5 rounded">
+                      {formatDate(event.scheduled_at)}
+                    </span>
+                    {event.allow_cross_gender && (
+                      <span className="text-xs bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded font-medium">
+                        反串
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-600 min-w-0">
+                    <EventLocation address={event.address} location={event.location} truncate />
+                    {event.script.store && (
+                      <div className="text-xs text-gray-400 truncate mt-0.5">{event.script.store.name}</div>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    主揪: {event.host.nickname}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                  {event.slot_parts ? (
+                    <span className="text-xs font-medium text-brand bg-brand-light/30 px-2.5 py-1 rounded-full border border-brand/20">
+                      缺 {event.slot_parts}
+                    </span>
+                  ) : (
+                    <span className="text-xs font-semibold text-gray-800 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-200">
+                      {event.confirmed_count}/{script.total_slots} 人
+                    </span>
+                  )}
+                  <Link
+                    to={`/events/${event.id}`}
+                    className="text-xs px-3 py-1.5 bg-brand text-white rounded-md hover:bg-brand-hover transition-colors font-medium"
+                  >
+                    詳細
+                  </Link>
+                </div>
+              </li>
+            ))}
+            </ul>
+          )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

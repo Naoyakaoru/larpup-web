@@ -32,9 +32,13 @@ interface Props {
   address: Address | null;
   location: string | null;
   className?: string;
+  truncate?: boolean;
 }
 
-export default function EventLocation({ address, location, className = "" }: Props) {
+export default function EventLocation({ address, location, className = "", truncate = false }: Props) {
+  const outerCls = truncate ? `flex items-center gap-0.5 min-w-0 ${className}` : className;
+  const textCls = truncate ? "truncate min-w-0" : "";
+
   if (address) {
     const text = `${REGION_LABELS[address.region as keyof typeof REGION_LABELS] ?? address.region}·${address.name}`;
     if (isSafeUrl(address.map_url)) {
@@ -43,18 +47,18 @@ export default function EventLocation({ address, location, className = "" }: Pro
           href={address.map_url!}
           target="_blank"
           rel="noopener noreferrer"
-          className={`text-gray-700 hover:text-gray-900 underline underline-offset-2 decoration-gray-300 hover:decoration-gray-500 transition-colors ${className}`}
+          className={`text-gray-700 hover:text-gray-900 underline underline-offset-2 decoration-gray-300 hover:decoration-gray-500 transition-colors ${outerCls}`}
           onClick={(e) => e.stopPropagation()}
         >
-          <PinIcon className="inline text-gray-400 -mt-0.5" />
-          <span>{text}</span>
+          <PinIcon className={`text-gray-400 -mt-0.5 ${truncate ? "" : "inline"}`} />
+          <span className={textCls}>{text}</span>
         </a>
       );
     }
     return (
-      <span className={className}>
-        <PinIcon className="inline text-gray-400 -mt-0.5" />
-        <span>{text}</span>
+      <span className={outerCls}>
+        <PinIcon className={`text-gray-400 -mt-0.5 ${truncate ? "" : "inline"}`} />
+        <span className={textCls}>{text}</span>
       </span>
     );
   }
@@ -67,14 +71,18 @@ export default function EventLocation({ address, location, className = "" }: Pro
         href={location}
         target="_blank"
         rel="noopener noreferrer"
-        className={`text-gray-700 hover:text-gray-900 underline underline-offset-2 decoration-gray-300 hover:decoration-gray-500 transition-colors ${className}`}
+        className={`text-gray-700 hover:text-gray-900 underline underline-offset-2 decoration-gray-300 hover:decoration-gray-500 transition-colors ${outerCls}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <PinIcon className="inline text-gray-400 -mt-0.5" />
+        <PinIcon className={`text-gray-400 -mt-0.5 ${truncate ? "" : "inline"}`} />
         <span>地圖</span>
       </a>
     );
   }
 
-  return <span className={className}>{location}</span>;
+  return (
+    <span className={outerCls}>
+      <span className={textCls}>{location}</span>
+    </span>
+  );
 }
