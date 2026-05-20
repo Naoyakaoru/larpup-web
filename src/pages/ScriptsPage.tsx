@@ -121,8 +121,11 @@ function ScriptsTab() {
   const difficulty = searchParams.get("difficulty") ?? "";
   const genresParam = searchParams.get("genres") ?? "";
   const genres = genresParam ? genresParam.split(",").map(Number) : [];
+  const q = searchParams.get("q") ?? "";
 
-  const filterKey = `${difficulty}|${genresParam}`;
+  const [searchQuery, setSearchQuery] = useState(q);
+
+  const filterKey = `${difficulty}|${genresParam}|${q}`;
 
   function updateDifficulty(d: string) {
     setSearchParams(
@@ -156,7 +159,30 @@ function ScriptsTab() {
 
   function clearFilters() {
     setSearchParams({}, { replace: true });
+    setSearchQuery("");
   }
+
+  useEffect(() => {
+    setSearchQuery(q);
+  }, [q]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (searchQuery.trim()) {
+            next.set("q", searchQuery.trim());
+          } else {
+            next.delete("q");
+          }
+          return next;
+        },
+        { replace: true }
+      );
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery, setSearchParams]);
 
   useEffect(() => {
     setPage(1);
@@ -174,6 +200,7 @@ function ScriptsTab() {
     getScripts({
       difficulty: difficulty || undefined,
       genres: genres.length ? genres : undefined,
+      q: q || undefined,
       page,
     })
       .then((res) => {
@@ -213,6 +240,52 @@ function ScriptsTab() {
 
   return (
     <>
+      {/* Search Input Box */}
+      <div className="mb-5 relative max-w-md">
+        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+          <svg
+            className="h-4 w-4 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+        <input
+          type="text"
+          placeholder="搜尋劇本名稱..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-full text-sm bg-surface placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all shadow-sm"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        )}
+      </div>
+
       <div className="flex flex-wrap lg:flex-nowrap lg:items-center gap-2 mb-4">
         {(["", "easy", "medium", "hard"] as const).map((d) => (
           <button

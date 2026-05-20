@@ -321,3 +321,25 @@ describe("ScriptsPage – tab navigation", () => {
     expect(mockGetScripts.mock.calls.length).toBe(callsBefore);
   });
 });
+
+// ─── search input ─────────────────────────────────────────────────────────────
+
+describe("ScriptsPage – search input", () => {
+  it("renders search placeholder and updates on text change", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await waitForLoaded();
+
+    const input = screen.getByPlaceholderText("搜尋劇本名稱...");
+    expect(input).toBeInTheDocument();
+
+    await user.type(input, "謀殺");
+    expect(input).toHaveValue("謀殺");
+
+    await waitFor(() => {
+      expect(mockGetScripts).toHaveBeenCalledWith(
+        expect.objectContaining({ q: "謀殺" })
+      );
+    });
+  });
+});
