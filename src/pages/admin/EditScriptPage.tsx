@@ -157,11 +157,10 @@ export default function EditScriptPage() {
                 key={value}
                 type="button"
                 onClick={() => toggleGenre(value)}
-                className={`text-sm px-3 py-1 rounded-full border transition-colors ${
-                  genres.includes(value)
-                    ? "bg-brand text-white border-brand"
-                    : "border-gray-300 text-gray-600 hover:border-gray-400"
-                }`}
+                className={`text-sm px-3 py-1 rounded-full border transition-colors ${genres.includes(value)
+                  ? "bg-brand text-white border-brand"
+                  : "border-gray-300 text-gray-600 hover:border-gray-400"
+                  }`}
               >
                 {label}
               </button>
