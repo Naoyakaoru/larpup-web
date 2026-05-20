@@ -1,6 +1,5 @@
-import React from "react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import ScriptDetailPage from "../pages/ScriptDetailPage";
 import type { Script, Event } from "../types";
@@ -49,8 +48,25 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
     offline_female: 0,
     confirmed_count: 3,
     slot_parts: "2男1女",
-    host: { id: 1, nickname: "阿明" } as any,
-    script: makeScript(),
+    host: { id: 1, handle: "aming", nickname: "阿明" },
+    script_version_id: 1,
+    available_slots: 3,
+    deleted_at: null,
+    script: {
+      id: makeScript().id,
+      title: makeScript().title,
+      total_slots: makeScript().total_slots,
+      male_slots: makeScript().male_slots,
+      female_slots: makeScript().female_slots,
+      any_slots: makeScript().any_slots,
+      difficulty: makeScript().difficulty,
+      genres: makeScript().genres,
+      duration: null,
+      price: null,
+      store: null,
+      version_name: null,
+      cover_image_url: null,
+    },
     ...overrides,
   };
 }
