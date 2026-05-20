@@ -68,7 +68,6 @@ export function scriptAutofill(title: string) {
     description: string
     publisher: string
     cover_image_id: string
-    cover_cdn_url: string
     key_property: string
   }>(`/admin/scripts/autofill?title=${encodeURIComponent(title)}`)
 }

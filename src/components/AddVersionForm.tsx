@@ -43,6 +43,7 @@ export default function AddVersionForm({
   const [newDuration, setNewDuration] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newPublisher, setNewPublisher] = useState("");
+  const [newCoverImageId, setNewCoverImageId] = useState("");
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -107,7 +108,9 @@ export default function AddVersionForm({
         version = await createStoreScriptVersion(storeId, {
           title: newTitle, difficulty: newDifficulty,
           male_slots: newMale, female_slots: newFemale, any_slots: newAny,
-          genres: newGenres, duration_override: Number(newDuration),
+          genres: newGenres,
+          duration_override: newDuration ? Number(newDuration) : undefined,
+          cover_image_id: newCoverImageId || undefined,
           price: Number(price), version_name: versionName || undefined,
           address_ids: selectedAddressIds.length ? selectedAddressIds : undefined,
           ...extras,
@@ -127,7 +130,7 @@ export default function AddVersionForm({
       setPrice(""); setDurationOverride(""); setVersionName("");
       setNpcCount(""); setGmCount(""); setHasFood(false); setHasCostumeChange(false);
       setNewTitle(""); setNewDifficulty("easy"); setNewMale(0); setNewFemale(0);
-      setNewAny(0); setNewGenres([]); setNewDuration("");
+      setNewAny(0); setNewGenres([]); setNewDuration(""); setNewCoverImageId("");
       setSelectedAddressIds([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "新增失敗");
@@ -204,6 +207,7 @@ export default function AddVersionForm({
                   if (data.duration) setNewDuration(String(data.duration));
                   if (data.description) setNewDescription(data.description);
                   if (data.publisher) setNewPublisher(data.publisher);
+                  if (data.cover_image_id) setNewCoverImageId(data.cover_image_id);
                   setAutofillMsg({ ok: true, text: "已自動填入，如有誤請直接修改" });
                 } catch (e: unknown) {
                   const msg = e instanceof Error && e.message.includes('404') ? "找不到此劇本資料，請手動填寫" : "自動填入失敗，請手動填寫";
@@ -251,7 +255,8 @@ export default function AddVersionForm({
           </div>
           <div>
             <label className="text-xs text-gray-500 mb-0.5 block">時長（小時）</label>
-            <input type="number" min={1} value={newDuration} onChange={(e) => setNewDuration(e.target.value)} required
+            <input type="number" min={1} value={newDuration} onChange={(e) => setNewDuration(e.target.value)}
+              placeholder="（選填）"
               className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
           </div>
           <div>
