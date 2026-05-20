@@ -21,6 +21,37 @@ const TIME_SLOT_OPTIONS: { value: TimeSlot; label: string }[] = [
   { value: "weekend", label: "假日" },
 ];
 
+function EventCardSkeleton() {
+  return (
+    <div data-testid="event-card-skeleton" className="flex gap-3 bg-surface rounded-xl p-3 shadow-sm overflow-hidden animate-pulse">
+      <div className="w-[72px] shrink-0">
+        <div className="aspect-[2/3] rounded-lg bg-gray-200" />
+      </div>
+      <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+        <div>
+          <div className="flex items-start justify-between gap-2 mb-1.5">
+            <div className="h-4 bg-gray-200 rounded w-3/4" />
+            <div className="h-4 bg-gray-200 rounded w-10 shrink-0" />
+          </div>
+          <div className="flex flex-wrap gap-1">
+            <div className="h-4 bg-gray-200 rounded w-12" />
+            <div className="h-4 bg-gray-200 rounded w-8" />
+            <div className="h-4 bg-gray-200 rounded w-14" />
+          </div>
+        </div>
+        <div className="mt-2 space-y-1.5">
+          <div className="h-3 bg-gray-200 rounded w-2/3" />
+          <div className="h-3 bg-gray-200 rounded w-1/2" />
+          <div className="flex items-center justify-between pt-0.5">
+            <div className="h-3 bg-gray-200 rounded w-16" />
+            <div className="h-4 bg-gray-200 rounded w-14" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -151,7 +182,11 @@ export default function EventsPage() {
       </div>
 
       {loading ? (
-        <div className="text-center text-gray-400 py-16">載入中...</div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <EventCardSkeleton key={i} />
+          ))}
+        </div>
       ) : filteredEvents.length === 0 ? (
         <div className="text-center text-gray-400 py-16">
           {events.length > 0 ? "沒有符合篩選條件的活動" : "目前沒有活動"}
