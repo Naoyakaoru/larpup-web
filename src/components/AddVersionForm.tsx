@@ -149,7 +149,7 @@ export default function AddVersionForm({
             {results.length === 0 ? (
               <div className="px-4 py-3 space-y-2">
                 <p className="text-sm text-gray-400">找不到符合的劇本</p>
-                <button type="button" onClick={() => { setShowNew(true); setDropdownOpen(false); }}
+                <button type="button" onClick={() => { setShowNew(true); setNewTitle(query.trim()); setDropdownOpen(false); }}
                   className="text-sm text-brand hover:text-brand-hover">+ 新增全新劇本</button>
               </div>
             ) : (
@@ -164,7 +164,7 @@ export default function AddVersionForm({
                   </li>
                 ))}
                 <li>
-                  <button type="button" onClick={() => { setShowNew(true); setDropdownOpen(false); }}
+                  <button type="button" onClick={() => { setShowNew(true); setNewTitle(query.trim()); setDropdownOpen(false); }}
                     className="w-full text-left px-4 py-2.5 text-sm text-brand hover:bg-gray-50">
                     + 新增全新劇本
                   </button>
