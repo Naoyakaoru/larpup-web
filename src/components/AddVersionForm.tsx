@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createStoreScriptVersion } from "../api/stores";
 import type { StoreScriptVersion } from "../api/stores";
-import { getScripts, importScriptCover, scriptAutofill } from "../api/scripts";
+import { getScripts, scriptAutofill } from "../api/scripts";
 import { getStoreAddresses } from "../api/addresses";
 import type { Script, Address } from "../types";
 import { DIFFICULTY_LABELS, GENRES } from "../utils/labels";
@@ -21,8 +21,6 @@ export default function AddVersionForm({
   const [showNew, setShowNew] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searching, setSearching] = useState(false);
-  const [fetchingCover, setFetchingCover] = useState(false);
-  const [coverMsg, setCoverMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [autofilling, setAutofilling] = useState(false);
   const [autofillMsg, setAutofillMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -45,6 +43,7 @@ export default function AddVersionForm({
   const [newDuration, setNewDuration] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newPublisher, setNewPublisher] = useState("");
+  const [newCoverImageId, setNewCoverImageId] = useState("");
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -109,7 +108,9 @@ export default function AddVersionForm({
         version = await createStoreScriptVersion(storeId, {
           title: newTitle, difficulty: newDifficulty,
           male_slots: newMale, female_slots: newFemale, any_slots: newAny,
-          genres: newGenres, duration_override: Number(newDuration),
+          genres: newGenres,
+          duration_override: newDuration ? Number(newDuration) : undefined,
+          cover_image_id: newCoverImageId || undefined,
           price: Number(price), version_name: versionName || undefined,
           address_ids: selectedAddressIds.length ? selectedAddressIds : undefined,
           ...extras,
@@ -129,7 +130,7 @@ export default function AddVersionForm({
       setPrice(""); setDurationOverride(""); setVersionName("");
       setNpcCount(""); setGmCount(""); setHasFood(false); setHasCostumeChange(false);
       setNewTitle(""); setNewDifficulty("easy"); setNewMale(0); setNewFemale(0);
-      setNewAny(0); setNewGenres([]); setNewDuration("");
+      setNewAny(0); setNewGenres([]); setNewDuration(""); setNewCoverImageId("");
       setSelectedAddressIds([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "新增失敗");
@@ -151,7 +152,7 @@ export default function AddVersionForm({
             {results.length === 0 ? (
               <div className="px-4 py-3 space-y-2">
                 <p className="text-sm text-gray-400">找不到符合的劇本</p>
-                <button type="button" onClick={() => { setShowNew(true); setDropdownOpen(false); }}
+                <button type="button" onClick={() => { setShowNew(true); setNewTitle(query.trim()); setDropdownOpen(false); }}
                   className="text-sm text-brand hover:text-brand-hover">+ 新增全新劇本</button>
               </div>
             ) : (
@@ -166,7 +167,7 @@ export default function AddVersionForm({
                   </li>
                 ))}
                 <li>
-                  <button type="button" onClick={() => { setShowNew(true); setDropdownOpen(false); }}
+                  <button type="button" onClick={() => { setShowNew(true); setNewTitle(query.trim()); setDropdownOpen(false); }}
                     className="w-full text-left px-4 py-2.5 text-sm text-brand hover:bg-gray-50">
                     + 新增全新劇本
                   </button>
@@ -181,35 +182,6 @@ export default function AddVersionForm({
         <div className="flex items-center gap-2 text-xs">
           {selected.cover_image_url ? (
             <img src={selected.cover_image_url} alt="cover" className="w-8 h-10 object-cover rounded" />
-          ) : selected.qiandao_cover_id ? (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={fetchingCover}
-                onClick={async () => {
-                  setCoverMsg(null);
-                  setFetchingCover(true);
-                  try {
-                    const updated = await importScriptCover(selected.id);
-                    setSelected(updated);
-                    setResults((prev) => prev.map((r) => r.id === updated.id ? updated : r));
-                    setCoverMsg({ ok: true, text: "封面已取得" });
-                  } catch {
-                    setCoverMsg({ ok: false, text: "無法取得封面，請稍後再試" });
-                  } finally {
-                    setFetchingCover(false);
-                  }
-                }}
-                className="flex items-center gap-1 px-2 py-1 rounded border border-brand/40 text-brand hover:bg-brand/5 disabled:opacity-50"
-              >
-                {fetchingCover ? "處理中..." : "✨ 自動帶入封面"}
-              </button>
-              {coverMsg && (
-                <span className={coverMsg.ok ? "text-green-600" : "text-amber-600"}>
-                  {coverMsg.ok ? "✓" : "⚠"} {coverMsg.text}
-                </span>
-              )}
-            </div>
           ) : null}
         </div>
       )}
@@ -227,6 +199,7 @@ export default function AddVersionForm({
                 setAutofillMsg(null);
                 try {
                   const data = await scriptAutofill(newTitle.trim());
+                  if (data.title) setNewTitle(data.title);
                   if (data.difficulty) setNewDifficulty(data.difficulty);
                   if (data.genres?.length) setNewGenres(data.genres);
                   if (data.male_slots != null) setNewMale(data.male_slots);
@@ -235,6 +208,7 @@ export default function AddVersionForm({
                   if (data.duration) setNewDuration(String(data.duration));
                   if (data.description) setNewDescription(data.description);
                   if (data.publisher) setNewPublisher(data.publisher);
+                  if (data.cover_image_id) setNewCoverImageId(data.cover_image_id);
                   setAutofillMsg({ ok: true, text: "已自動填入，如有誤請直接修改" });
                 } catch (e: unknown) {
                   const msg = e instanceof Error && e.message.includes('404') ? "找不到此劇本資料，請手動填寫" : "自動填入失敗，請手動填寫";
@@ -282,7 +256,8 @@ export default function AddVersionForm({
           </div>
           <div>
             <label className="text-xs text-gray-500 mb-0.5 block">時長（小時）</label>
-            <input type="number" min={1} value={newDuration} onChange={(e) => setNewDuration(e.target.value)} required
+            <input type="number" min={1} value={newDuration} onChange={(e) => setNewDuration(e.target.value)}
+              placeholder="（選填）"
               className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
           </div>
           <div>

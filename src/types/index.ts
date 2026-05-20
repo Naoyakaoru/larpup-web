@@ -50,8 +50,8 @@ export interface Script {
   publisher: string | null;
   status: "pending" | "approved" | "rejected";
   cover_image_url: string | null;
-  qiandao_cover_id?: string | null;
   deleted_at?: string | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface Event {

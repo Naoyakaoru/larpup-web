@@ -12,10 +12,10 @@ export default function EditScriptPage() {
     title: "",
     description: "",
     difficulty: "easy",
-    duration: "" as string | number,
-    male_slots: 0,
-    female_slots: 0,
-    any_slots: 0,
+    duration: "",
+    male_slots: "0",
+    female_slots: "0",
+    any_slots: "0",
   });
   const [genres, setGenres] = useState<number[]>([]);
   const [coverImage, setCoverImage] = useState<File | null>(null);
@@ -44,10 +44,10 @@ export default function EditScriptPage() {
         title: s.title,
         description: s.description ?? "",
         difficulty: s.difficulty,
-        duration: s.duration ?? "",
-        male_slots: s.male_slots,
-        female_slots: s.female_slots,
-        any_slots: s.any_slots,
+        duration: s.duration != null ? String(s.duration) : "",
+        male_slots: String(s.male_slots),
+        female_slots: String(s.female_slots),
+        any_slots: String(s.any_slots),
       });
       setGenres(s.genres);
     });
@@ -61,8 +61,7 @@ export default function EditScriptPage() {
     ) =>
       setForm((f) => ({
         ...f,
-        [field]:
-          e.target.type === "number" ? Number(e.target.value) : e.target.value,
+        [field]: e.target.value,
       }));
   }
 
@@ -157,11 +156,10 @@ export default function EditScriptPage() {
                 key={value}
                 type="button"
                 onClick={() => toggleGenre(value)}
-                className={`text-sm px-3 py-1 rounded-full border transition-colors ${
-                  genres.includes(value)
-                    ? "bg-brand text-white border-brand"
-                    : "border-gray-300 text-gray-600 hover:border-gray-400"
-                }`}
+                className={`text-sm px-3 py-1 rounded-full border transition-colors ${genres.includes(value)
+                  ? "bg-brand text-white border-brand"
+                  : "border-gray-300 text-gray-600 hover:border-gray-400"
+                  }`}
               >
                 {label}
               </button>
