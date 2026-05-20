@@ -74,7 +74,6 @@ export default function EventsPage() {
   // FE-2: reset client-side filters when server-side status filter changes
   useEffect(() => {
     clearFilters();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   // FE-4: Escape to close drawer + body scroll lock

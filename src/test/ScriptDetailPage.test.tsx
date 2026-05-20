@@ -14,7 +14,7 @@ vi.mock("../api/scripts", () => ({
 }));
 
 vi.mock("../api/events", () => ({
-  getEvents: (filters: any) => mockGetEvents(filters),
+  getEvents: (filters: Record<string, string>) => mockGetEvents(filters),
 }));
 
 function makeScript(overrides: Partial<Script> = {}): Script {
