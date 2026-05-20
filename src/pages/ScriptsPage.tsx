@@ -297,14 +297,14 @@ function ScriptsTab() {
                   </h2>
                   <div className="flex items-center justify-between gap-1">
                     <div className="flex gap-1 flex-wrap">
-                      {script.genres
+                      {(script.genres ?? [])
                         .filter((g) => g >= 15)
                         .map((g) => (
                           <span key={g} className="text-xs text-amber-400 font-medium">
                             {GENRE_LABELS[g]}
                           </span>
                         ))}
-                      {script.genres
+                      {(script.genres ?? [])
                         .filter((g) => g < 15)
                         .slice(0, 2)
                         .map((g) => (
