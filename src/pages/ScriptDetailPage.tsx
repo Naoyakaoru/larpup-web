@@ -5,12 +5,13 @@ import type { ScriptVersion } from "../api/scripts";
 import type { Script, Event } from "../types";
 import { getEvents } from "../api/events";
 import EventLocation from "../components/EventLocation";
-import { formatDate } from "../utils/formatDate";
+import { formatDate, getTimeSlot, type TimeSlot } from "../utils/formatDate";
 
 import {
   DIFFICULTY_COLORS,
   DIFFICULTY_LABELS,
   GENRE_LABELS,
+  REGION_OPTIONS,
 } from "../utils/labels";
 
 export default function ScriptDetailPage() {
@@ -19,7 +20,18 @@ export default function ScriptDetailPage() {
   const [script, setScript] = useState<Script | null>(null);
   const [versions, setVersions] = useState<ScriptVersion[]>([]);
   const [activeEvents, setActiveEvents] = useState<Event[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<string>("");
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | "">("");
   const [loading, setLoading] = useState(true);
+
+  const filteredActiveEvents = activeEvents
+    .filter((e) => !selectedRegion || e.address?.region === selectedRegion)
+    .filter((e) => {
+      if (!selectedTimeSlot) return true;
+      const slot = getTimeSlot(e.scheduled_at);
+      if (selectedTimeSlot === "weekday_night") return slot === "weekday_night" || slot === "friday_night";
+      return slot === selectedTimeSlot;
+    });
 
   useEffect(() => {
     const scriptId = Number(id);
@@ -174,11 +186,60 @@ export default function ScriptDetailPage() {
 
       {activeEvents.length > 0 && (
         <div className="mt-6 bg-surface border border-gray-200 rounded-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 space-y-2">
             <p className="text-sm font-medium text-gray-700">可加入的活動（直接跟團）</p>
+            <div className="flex gap-1.5 flex-wrap">
+              <button
+                onClick={() => setSelectedRegion("")}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  selectedRegion === ""
+                    ? "bg-brand text-white border-brand"
+                    : "text-gray-500 border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                全部
+              </button>
+              {REGION_OPTIONS.map((r) => (
+                <button
+                  key={r.value}
+                  onClick={() => setSelectedRegion(selectedRegion === r.value ? "" : r.value)}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                    selectedRegion === r.value
+                      ? "bg-brand text-white border-brand"
+                      : "text-gray-500 border-gray-300 hover:bg-gray-100"
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              {(["", "weekday_day", "weekday_night", "friday_night", "weekend"] as const).map((t) => {
+                const label = t === "" ? "全時段" : t === "weekday_day" ? "平白" : t === "weekday_night" ? "平晚" : t === "friday_night" ? "五晚" : "假日";
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setSelectedTimeSlot(selectedTimeSlot === t ? "" : t)}
+                    className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                      selectedTimeSlot === t
+                        ? "bg-brand text-white border-brand"
+                        : "text-gray-500 border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <ul className="divide-y divide-gray-100">
-            {activeEvents.map((event) => (
+          <div className="min-h-[10.8rem] flex flex-col">
+          {filteredActiveEvents.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center text-sm text-gray-400">
+              沒有符合條件的活動
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+            {filteredActiveEvents.map((event) => (
               <li
                 key={event.id}
                 className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-gray-50/50 transition-colors"
@@ -194,8 +255,11 @@ export default function ScriptDetailPage() {
                       </span>
                     )}
                   </div>
-                  <div className="text-sm text-gray-600">
-                    <EventLocation address={event.address} location={event.location} />
+                  <div className="text-sm text-gray-600 min-w-0">
+                    <EventLocation address={event.address} location={event.location} truncate />
+                    {event.script.store && (
+                      <div className="text-xs text-gray-400 truncate mt-0.5">{event.script.store.name}</div>
+                    )}
                   </div>
                   <div className="text-xs text-gray-400 mt-1">
                     主揪: {event.host.nickname}
@@ -220,7 +284,9 @@ export default function ScriptDetailPage() {
                 </div>
               </li>
             ))}
-          </ul>
+            </ul>
+          )}
+          </div>
         </div>
       )}
     </div>

@@ -70,7 +70,7 @@ describe("EventsPage – rendering", () => {
   it("shows loading state initially", () => {
     mockEvents = [];
     renderPage();
-    expect(screen.getByText("載入中...")).toBeInTheDocument();
+    expect(screen.getAllByTestId("event-card-skeleton").length).toBeGreaterThan(0);
   });
 
   it("shows empty state when no events", async () => {
@@ -125,14 +125,13 @@ describe("EventsPage – rendering", () => {
 });
 
 describe("EventsPage – status filter", () => {
-  it("renders filter buttons for all, recruiting, full", async () => {
+  it("renders filter buttons for all and recruiting", async () => {
     mockEvents = [];
     renderPage();
 
     await screen.findByText("目前沒有活動");
     expect(screen.getByRole("button", { name: "全部" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "招募中" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "已滿員" })).toBeInTheDocument();
   });
 
   it("highlights the active filter button", async () => {
