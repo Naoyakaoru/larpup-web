@@ -68,3 +68,10 @@ export const REGION_LABELS: Record<RegionKey, string> = Object.fromEntries(
 
 /** @deprecated use REGION_OPTIONS */
 export const TAIWAN_REGIONS = REGION_OPTIONS.map((o) => o.value) as string[]
+
+/** Tokens used in slot_parts string from the backend (e.g. "2男1女"). */
+export const SLOT_TOKENS = {
+  male: "男",
+  female: "女",
+  any: "不限",
+} as const

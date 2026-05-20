@@ -286,7 +286,7 @@ function ScriptsTab() {
         )}
       </div>
 
-      <div className="flex flex-wrap lg:flex-nowrap lg:items-center gap-2 mb-4">
+      <div className="flex flex-wrap lg:flex-nowrap lg:items-center gap-x-2 gap-y-1.5 mb-4">
         {(["", "easy", "medium", "hard"] as const).map((d) => (
           <button
             key={d}
@@ -322,13 +322,33 @@ function ScriptsTab() {
 
         <button
           onClick={() => setDrawerOpen(true)}
-          className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
+          className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border transition-colors ${
             activeCount > 0
-              ? "border-brand text-brand"
+              ? "bg-brand text-white border-brand"
               : "border-gray-300 text-gray-600 hover:border-gray-400"
           }`}
         >
-          篩選{activeCount > 0 ? ` (${activeCount})` : ""}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="4" y1="6" x2="20" y2="6" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+            <line x1="11" y1="18" x2="13" y2="18" />
+          </svg>
+          篩選
+          {activeCount > 0 && (
+            <span className="bg-surface text-brand font-bold rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none">
+              {activeCount}
+            </span>
+          )}
         </button>
       </div>
 
@@ -424,7 +444,8 @@ function ScriptsTab() {
           genres={genres}
           onDifficultyChange={updateDifficulty}
           onGenreToggle={toggleGenre}
-          onClear={() => { clearFilters(); setDrawerOpen(false); }}
+          // FE-6: clear-only, don't close (consistent with EventsPage)
+          onClear={clearFilters}
           onClose={() => setDrawerOpen(false)}
         />
       )}
