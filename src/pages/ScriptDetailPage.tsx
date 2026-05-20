@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getScript, getScriptVersions } from "../api/scripts";
 import type { ScriptVersion } from "../api/scripts";
-import type { Script } from "../types";
+import type { Script, Event } from "../types";
+import { getEvents } from "../api/events";
+import EventLocation from "../components/EventLocation";
+import { formatDate } from "../utils/formatDate";
 
 import {
   DIFFICULTY_COLORS,
@@ -15,14 +18,20 @@ export default function ScriptDetailPage() {
   const navigate = useNavigate();
   const [script, setScript] = useState<Script | null>(null);
   const [versions, setVersions] = useState<ScriptVersion[]>([]);
+  const [activeEvents, setActiveEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const scriptId = Number(id);
-    Promise.all([getScript(scriptId), getScriptVersions(scriptId)])
-      .then(([s, v]) => {
+    Promise.all([
+      getScript(scriptId),
+      getScriptVersions(scriptId),
+      getEvents({ script_id: scriptId, status: "recruiting" }),
+    ])
+      .then(([s, v, evs]) => {
         setScript(s);
         setVersions(v);
+        setActiveEvents(evs);
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -162,6 +171,58 @@ export default function ScriptDetailPage() {
       >
         {versions.length > 0 ? "不指定店家，直接揪團" : "用這個劇本揪團"}
       </Link>
+
+      {activeEvents.length > 0 && (
+        <div className="mt-6 bg-surface border border-gray-200 rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+            <p className="text-sm font-medium text-gray-700">可加入的活動（直接跟團）</p>
+          </div>
+          <ul className="divide-y divide-gray-100">
+            {activeEvents.map((event) => (
+              <li
+                key={event.id}
+                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-gray-50/50 transition-colors"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="text-xs font-semibold text-gray-900 bg-gray-100 px-2 py-0.5 rounded">
+                      {formatDate(event.scheduled_at)}
+                    </span>
+                    {event.allow_cross_gender && (
+                      <span className="text-xs bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded font-medium">
+                        反串
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <EventLocation address={event.address} location={event.location} />
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    主揪: {event.host.nickname}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                  {event.slot_parts ? (
+                    <span className="text-xs font-medium text-brand bg-brand-light/30 px-2.5 py-1 rounded-full border border-brand/20">
+                      缺 {event.slot_parts}
+                    </span>
+                  ) : (
+                    <span className="text-xs font-semibold text-gray-800 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-200">
+                      {event.confirmed_count}/{script.total_slots} 人
+                    </span>
+                  )}
+                  <Link
+                    to={`/events/${event.id}`}
+                    className="text-xs px-3 py-1.5 bg-brand text-white rounded-md hover:bg-brand-hover transition-colors font-medium"
+                  >
+                    詳細
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
