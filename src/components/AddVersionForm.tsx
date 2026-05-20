@@ -199,6 +199,7 @@ export default function AddVersionForm({
                 setAutofillMsg(null);
                 try {
                   const data = await scriptAutofill(newTitle.trim());
+                  if (data.title) setNewTitle(data.title);
                   if (data.difficulty) setNewDifficulty(data.difficulty);
                   if (data.genres?.length) setNewGenres(data.genres);
                   if (data.male_slots != null) setNewMale(data.male_slots);
