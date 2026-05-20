@@ -322,6 +322,7 @@ function ScriptsTab() {
 
         <button
           onClick={() => setDrawerOpen(true)}
+          aria-label={activeCount > 0 ? `篩選 (${activeCount})` : "篩選"}
           className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border transition-colors ${
             activeCount > 0
               ? "bg-brand text-white border-brand"
