@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createStoreScriptVersion } from "../api/stores";
 import type { StoreScriptVersion } from "../api/stores";
-import { getScripts, importScriptCover, scriptAutofill } from "../api/scripts";
+import { getScripts, scriptAutofill } from "../api/scripts";
 import { getStoreAddresses } from "../api/addresses";
 import type { Script, Address } from "../types";
 import { DIFFICULTY_LABELS, GENRES } from "../utils/labels";
@@ -21,8 +21,6 @@ export default function AddVersionForm({
   const [showNew, setShowNew] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searching, setSearching] = useState(false);
-  const [fetchingCover, setFetchingCover] = useState(false);
-  const [coverMsg, setCoverMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [autofilling, setAutofilling] = useState(false);
   const [autofillMsg, setAutofillMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -181,35 +179,6 @@ export default function AddVersionForm({
         <div className="flex items-center gap-2 text-xs">
           {selected.cover_image_url ? (
             <img src={selected.cover_image_url} alt="cover" className="w-8 h-10 object-cover rounded" />
-          ) : selected.qiandao_cover_id ? (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={fetchingCover}
-                onClick={async () => {
-                  setCoverMsg(null);
-                  setFetchingCover(true);
-                  try {
-                    const updated = await importScriptCover(selected.id);
-                    setSelected(updated);
-                    setResults((prev) => prev.map((r) => r.id === updated.id ? updated : r));
-                    setCoverMsg({ ok: true, text: "封面已取得" });
-                  } catch {
-                    setCoverMsg({ ok: false, text: "無法取得封面，請稍後再試" });
-                  } finally {
-                    setFetchingCover(false);
-                  }
-                }}
-                className="flex items-center gap-1 px-2 py-1 rounded border border-brand/40 text-brand hover:bg-brand/5 disabled:opacity-50"
-              >
-                {fetchingCover ? "處理中..." : "✨ 自動帶入封面"}
-              </button>
-              {coverMsg && (
-                <span className={coverMsg.ok ? "text-green-600" : "text-amber-600"}>
-                  {coverMsg.ok ? "✓" : "⚠"} {coverMsg.text}
-                </span>
-              )}
-            </div>
           ) : null}
         </div>
       )}
