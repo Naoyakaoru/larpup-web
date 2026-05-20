@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { getScripts } from "../api/scripts";
 import { getStores } from "../api/stores";
+import { useAuth } from "../contexts/AuthContext";
 import type { Script, Store } from "../types";
 import {
   DIFFICULTY_LABELS,
@@ -114,6 +115,8 @@ function ScriptsTab() {
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const { token } = useAuth();
+  const isLoggedIn = !!token;
 
   const difficulty = searchParams.get("difficulty") ?? "";
   const genresParam = searchParams.get("genres") ?? "";
@@ -195,7 +198,7 @@ function ScriptsTab() {
   }, [filterKey, page]);
 
   useEffect(() => {
-    if (loading || loadingMore || !hasMore) return;
+    if (loading || loadingMore || !hasMore || !isLoggedIn) return;
 
     observerRef.current = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) setPage((p) => p + 1);
@@ -204,7 +207,7 @@ function ScriptsTab() {
     if (loadMoreRef.current) observerRef.current.observe(loadMoreRef.current);
 
     return () => observerRef.current?.disconnect();
-  }, [loading, loadingMore, hasMore]);
+  }, [loading, loadingMore, hasMore, isLoggedIn]);
 
   const activeCount = (difficulty ? 1 : 0) + genres.length;
 
@@ -323,9 +326,23 @@ function ScriptsTab() {
       )}
 
       {hasMore && (
-        <div ref={loadMoreRef} className="py-8 text-center text-sm text-gray-400">
-          {loadingMore ? "載入更多劇本中..." : "向下捲動載入更多"}
-        </div>
+        isLoggedIn ? (
+          <div ref={loadMoreRef} className="py-8 text-center text-sm text-gray-400">
+            {loadingMore ? "載入更多劇本中..." : "向下捲動載入更多"}
+          </div>
+        ) : (
+          <div className="py-12 flex flex-col items-center gap-4 border-t border-gray-100 mt-6">
+            <p className="text-gray-500 text-sm font-medium">登入後查看更多劇本</p>
+            <div className="flex gap-3">
+              <Link
+                to="/profile"
+                className="px-5 py-2 rounded-full bg-brand text-white text-sm font-medium hover:bg-brand-hover transition-colors"
+              >
+                登入 / 註冊
+              </Link>
+            </div>
+          </div>
+        )
       )}
 
       {drawerOpen && (
